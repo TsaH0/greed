@@ -172,6 +172,15 @@ local languages: { [string]: Language } = {
 		comment = "//",
 		indent = 4,
 	},
+	cuda = {
+		formatter = { "clang-format", "--assume-filename={path}" },
+		extensions = { "cu", "cuh" },
+		roots = { "compile_commands.json", "CMakeLists.txt", "Makefile" },
+		servers = { { "clangd" } },
+		reads_only = true,
+		comment = "//",
+		indent = 4,
+	},
 	css = {
 		formatter = { "prettier", "--stdin-filepath", "{path}" },
 		extensions = { "css", "scss" },
@@ -393,7 +402,16 @@ local languages: { [string]: Language } = {
 	zig = {
 		formatter = { "zig", "fmt", "--stdin" },
 		extensions = { "zig" },
-		roots = { "build.zig" },
+		roots = { "build.zig", "build.zig.zon" },
+		servers = { { "zls" } },
+		comment = "//",
+		indent = 4,
+	},
+	-- Zig's object notation, as build.zig.zon is written in: Zig's grammar,
+	-- with no formatter, as `zig fmt --stdin` reads only Zig.
+	zon = {
+		extensions = { "zon" },
+		roots = { "build.zig", "build.zig.zon" },
 		servers = { { "zls" } },
 		comment = "//",
 		indent = 4,
