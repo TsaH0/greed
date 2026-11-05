@@ -3107,12 +3107,16 @@ or `GREED_COLORS=256` decides for a terminal that says the wrong thing.
 ### Highlighting and syntax queries
 
 Greed has grammars built in for Rust, Nix, Bash, Python, Go, JavaScript,
-TypeScript, C, Luau, JSON, TOML, YAML and Markdown. For C++, C#, Java,
-Ruby, Scala, Haskell, OCaml, Julia, HTML, CSS and HCL (Terraform and
+TypeScript, C, Luau, JSON, TOML, YAML and Markdown. For C++, CUDA, C#,
+Java, Kotlin, Ruby, PHP, Perl, Elixir, Scala, Haskell, OCaml, Julia, R,
+Zig (and ZON), Odin, Make, XML, HTML, CSS and HCL (Terraform and
 OpenTofu, whose language servers `terraform-ls` and `tofu-ls` start when
 installed) it downloads the grammar the first time you open a file in that
 language, checks it against a checksum Greed knows, and keeps it in
-`~/.cache/greed/grammars`.
+`~/.cache/greed/grammars`. Their language servers start as the others' do
+when they're installed: `zls` for Zig, `kotlin-language-server`,
+`intelephense` for PHP, `elixir-ls`, `ols` for Odin and so on; `:health`
+lists them.
 
 | | |
 |---|---|

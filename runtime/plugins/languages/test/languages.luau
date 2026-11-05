@@ -61,7 +61,8 @@ test(":health lists each language with its highlighting and servers", function(t
 	local report = t:floats()[1]
 	assert(string.find(report, "rust%s+highlighting%s+rust%-analyzer"), report)
 	assert(string.find(report, "ruby%s+downloads%s+ruby%-lsp, solargraph"), report)
-	assert(string.find(report, "zig%s+no grammar%s+zls"), report)
+	assert(string.find(report, "zig%s+downloads%s+zls"), report)
+	assert(string.find(report, "swift%s+no grammar%s+sourcekit%-lsp"), report)
 	t:keys("q")
 	assert(#t:floats() == 0, "q closes it")
 end)
@@ -380,6 +381,33 @@ test(
 		typed(t, "ruby", "class A\n  def b|", "a enter", "class A\n  def b\n    |")
 	end
 )
+
+test("Neovim's lua-match becomes a match on a regex that matches the same", function()
+	local adapted = languages.grammars.adapt(
+		'((identifier) @type (#lua-match? @type "^[A-Z_][%w_]*$"))\n'
+			.. '((comment) @comment (#not-lua-match? @comment "^//!%s-%.$"))'
+	)
+	assert(
+		adapted
+			== '((identifier) @type (#match? @type "^[A-Z_][[:alnum:]_]*$"))\n'
+				.. '((comment) @comment (#not-match? @comment "^//![[:space:]]*?\\\\.$"))',
+		adapted
+	)
+	assert(languages.grammars.regex("[^]%a]-%D") == "[^\\\\][:alpha:]]*?[[:^digit:]]")
+end)
+
+test("Zig, Kotlin, PHP and others download their grammar, ZON with Zig's", function()
+	local sources = languages.grammars.sources
+	local names = { "zig", "kotlin", "php", "elixir", "odin", "make", "xml", "r", "perl", "cuda" }
+	for _, name in names do
+		assert(sources[name], name)
+	end
+	assert(sources.zon == sources.zig and sources.zig.symbol == "zig", "one grammar")
+	assert(greed.language_of("build.zig.zon") == "zon", tostring(greed.language_of("build.zig.zon")))
+	assert(greed.language_of("kernel.cu") == "cuda", tostring(greed.language_of("kernel.cu")))
+	assert(greed.language_of("Main.kt") == "kotlin", "kotlin")
+	assert(greed.language_of("index.php") == "php", "php")
+end)
 
 test("a pattern for names that aren't locals becomes a catch-all after the others", function()
 	local adapted = languages.grammars.adapt(

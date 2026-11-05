@@ -101,8 +101,70 @@ M.sources = {
 		"v0.26.0",
 		"bfa3eef92b9d3cc1117aa486d46ecb06c98a3a28c1747660aaa5851df5e4530c"
 	),
+	php = tree_sitter(
+		"php",
+		"v0.25.1",
+		"bd5e2bf8d42306b7aa32e6b7e39ae9fd9543c62a875ad8b2bc3d488242f72817"
+	),
 } :: { [string]: Source }
 M.sources.cpp.inherits = { "c" }
+
+local function grammars(repo: string, version: string, sha256: string): Source
+	return { repo = `tree-sitter-grammars/{repo}`, version = version, sha256 = sha256 }
+end
+
+M.sources.zig = grammars(
+	"tree-sitter-zig",
+	"v1.1.2",
+	"54b3b83dd9c62da5815f06132bc3fc914d9dcc780370b32416446a0b7969e8c6"
+)
+-- Its grammar is called zig whichever language loads it.
+M.sources.zig.symbol = "zig"
+M.sources.zon = M.sources.zig
+M.sources.odin = grammars(
+	"tree-sitter-odin",
+	"v1.3.0",
+	"4a3c9f50ac2356d2284d26e92322c554b276ad6bf6bce87a8594cff95d2ed6f1"
+)
+M.sources.make = grammars(
+	"tree-sitter-make",
+	"v1.1.1",
+	"1254d1e5787be8bb944d55d1f6552b6b2b7908272ed498013bfdc07bd7d042dd"
+)
+M.sources.cuda = grammars(
+	"tree-sitter-cuda",
+	"v0.21.2",
+	"3af5699d2ced8cd23b25da09193179b47e31e36bc7f7c7ff72427803ce9ed4b6"
+)
+M.sources.cuda.inherits = { "cpp" }
+-- The repository has XML's and DTD's grammars, each with its own queries.
+M.sources.xml = grammars(
+	"tree-sitter-xml",
+	"v0.7.0",
+	"9950327f8542a3d563fe4192aa05986a53e6fd6adca518cbb1a1699cbc8970ad"
+)
+M.sources.xml.queries =
+	"https://raw.githubusercontent.com/tree-sitter-grammars/tree-sitter-xml/v0.7.0/queries/xml/{kind}.scm"
+M.sources.kotlin = {
+	repo = "fwcd/tree-sitter-kotlin",
+	version = "0.3.8",
+	sha256 = "c624e7443b371c28adc5d81674e73067564c12555ebe3ed96a6c8db814b7602d",
+}
+M.sources.elixir = {
+	repo = "elixir-lang/tree-sitter-elixir",
+	version = "v0.3.5",
+	sha256 = "1818ae0d7343f880abb0b7932c9a815f09896ca67b3e126096a2dd7677d1477b",
+}
+M.sources.r = {
+	repo = "r-lib/tree-sitter-r",
+	version = "v1.3.0",
+	sha256 = "3e406e27cec05a60ba3281e2da021187200b83d152d9eb0dcf0a731cbfbcc28d",
+}
+M.sources.perl = {
+	repo = "tree-sitter-perl/tree-sitter-perl",
+	version = "v2.0.4",
+	sha256 = "5cf639cfa71699a04d76d89c24cef314f5f31f7ab598b00610b97d9cde8033ec",
+}
 
 -- HCL, which Terraform and OpenTofu files are written in. The grammar has
 -- no queries of its own; Helix's (same license as Greed) fit it.
@@ -156,6 +218,67 @@ local NAMES: { [string]: string? } = {
 -- Captures that are only for other editors' own features.
 local DROPPED = { embedded = true, spell = true, nospell = true, none = true }
 
+-- Lua's character classes, as the regex classes that match the same.
+local CLASSES: { [string]: string? } = {
+	a = "alpha",
+	c = "cntrl",
+	d = "digit",
+	l = "lower",
+	p = "punct",
+	s = "space",
+	u = "upper",
+	w = "alnum",
+	x = "xdigit",
+}
+
+--- `pattern`, a Lua pattern, as a regex that matches the same, written to
+--- go in a query's string, where a backslash is doubled.
+function M.regex(pattern: string): string
+	local out = {}
+	local inside = false
+	local i = 1
+	while i <= #pattern do
+		local c = string.sub(pattern, i, i)
+		local class = if c == "%" then string.sub(pattern, i + 1, i + 1) else ""
+		local name = CLASSES[string.lower(class)]
+		if name then
+			local negated = class ~= string.lower(class)
+			local inner = if negated then `[:^{name}:]` else `[:{name}:]`
+			table.insert(out, if inside then inner else `[{inner}]`)
+			i += 1
+		elseif c == "%" then
+			table.insert(out, "\\\\" .. class)
+			i += 1
+		elseif inside then
+			table.insert(out, if c == "\\" then "\\\\\\\\" else c)
+			inside = c ~= "]"
+		elseif c == "[" then
+			table.insert(out, c)
+			inside = true
+			-- A `]` right after `[` or `[^` is one of the set.
+			local after = string.sub(pattern, i + 1, i + 1)
+			if after == "^" then
+				table.insert(out, "^")
+				i += 1
+				after = string.sub(pattern, i + 1, i + 1)
+			end
+			if after == "]" then
+				table.insert(out, "\\\\]")
+				i += 1
+			end
+		elseif c == "-" then
+			-- Lua's lazy repeat.
+			table.insert(out, "*?")
+		elseif string.find("{}|\\", c, 1, true) then
+			table.insert(out, "\\\\" .. c)
+		else
+			table.insert(out, c)
+		end
+		i += 1
+	end
+	return table.concat(out)
+end
+
 -- A pattern that names any node of a kind, like `(identifier) @variable`.
 -- With the first pattern to match some text winning, these go last.
 local CATCH_ALL = "^%(([%w_]+)%)%s+@[%w._]+$"
@@ -173,6 +296,18 @@ function M.adapt(source: string): string
 	-- in the grammar, which not every build of one has; the node alone
 	-- matches the same text.
 	renamed = string.gsub(renamed, "%(([%w_]+)/([%w_]+)", "(%2")
+	-- Neovim's `#lua-match?` takes a Lua pattern; left as it is, nothing
+	-- checks it and the pattern matches everything, like every identifier
+	-- as a type. As a regex `#match?` checks the same.
+	for negated, escaped in { [""] = "", ["not-"] = "not%-" } do
+		renamed = string.gsub(
+			renamed,
+			`#{escaped}lua%-match%?(%s+@[%w._]+%s+)"([^"]*)"`,
+			function(capture: string, pattern: string): string
+				return `#{negated}match?{capture}"{M.regex(pattern)}"`
+			end
+		)
+	end
 	-- Greed doesn't track which names are local variables, so a pattern
 	-- for those that aren't is a catch-all, kept after the others.
 	renamed =
@@ -293,6 +428,11 @@ function M.ensure(name: string, provided: (language: string, kind: string) -> bo
 		end
 		greed.syntax.load_grammar(name, wasm, source.symbol)
 		local dir = folder(name, source)
+		-- A parent that downloads too, like C++ for CUDA, is set up first,
+		-- so its queries are there to come before this one's.
+		for _, parent in source.inherits or {} :: { string } do
+			pcall(M.ensure, parent, provided)
+		end
 		for _, kind in KINDS do
 			local own = greed.fs.read(`{dir}/{kind}.scm`)
 			if own and not provided(name, kind) then
