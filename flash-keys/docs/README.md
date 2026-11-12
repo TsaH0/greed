@@ -213,14 +213,26 @@ Cursors on lines next to each other move and duplicate as one block.
 | `C-p` | Next pane | `A-p` | Previous pane |
 | `C-n` | Next search match | `A-n` | Previous search match |
 | `C-/` | Search forward | `A-/` | Search backward |
-| `C-m x` | Jump: type a character, then its label | `A-m` | Cancel the jump; afterwards, go back to where it started |
+| `C-m` | Jump, as flash.nvim: type what you're after, then its label | `A-m` | Cancel the jump; afterwards, go back to where it started |
 | `C-'` `x` | Set mark `x` | `A-'` `x` | Go to mark `x` |
 | `C-=` | Bigger text (window only) | `A-=` | Smaller text |
 | `C--` | Fold the block | `A--` | Unfold it |
 
-The jump labels only what's on screen, nearest first, with one letter
-each while the alphabet lasts and two after that
-(`jump-label-alphabet` sets the letters). It lands one cursor.
+The jump works as flash.nvim's does. Press `C-m` and type what you're
+looking for, one character or several: every match on screen lights up,
+the rest of the screen dims, and each match gets a label just after it,
+nearest first. Type the label to jump to the start of that match, or keep
+typing to narrow the matches down.
+
+- A label is never a letter that comes right after a match, so whatever
+  you type is either a label or more of the search, never both.
+- A match keeps its label as you type more.
+- Lower case finds any case; a capital makes the search exact (smart case).
+- `enter` jumps to the nearest match, `backspace` takes back a character
+  (on none, cancels), `esc` or `A-m` cancels.
+- `C-S-m` extends the selection to the match instead of moving there.
+- Labels come from `jump-label-alphabet`, one letter each; with more
+  matches than letters, type more to bring the rest down to a few.
 
 ### C-g: navigation
 
@@ -307,7 +319,7 @@ arrive as themselves. Use the fallbacks:
 | Key | What the terminal sends without the protocol | Fallback |
 |---|---|---|
 | `C-i` | `tab` | `tab` indents a multi-line selection; `C-c e =` reindents |
-| `C-m` | `enter` | `C-g w` jumps to a word |
+| `C-m` | `enter` | `C-g w` jumps to a word by its label |
 | `C-[` / `A-[` | `esc` / the start of an escape code | `C-t C-o` selects the node, `A-t A-o` the one around it, `C-t -` shrinks |
 | `C-]` / `A-]` | `C-]` works; `alt-]` may not | `C-t ]` / `C-t [` next / previous sibling |
 | `C-'` / `A-'` | Nothing usable | `C-g m x` / `C-g ' x` |
@@ -414,9 +426,9 @@ and terminals, which have layers of their own ahead of a style's.
   and `:s` take Rust regexes, which are close to `\v` already: `(foo|bar)`
   groups and alternates without backslashes. `:%s/(foo|bar)/baz/g` works
   through `C-x :`; Vim's `\v`, `\<`, `\>` and the `c` (confirm) flag don't.
-- The jump labels characters only. Word labels are `C-g w` (Greed's own);
-  line-number labels aren't there.
-- A jump lands one cursor, even with several.
+- The jump searches the view you're in, not every pane as flash.nvim
+  can, and has no line-number labels; word labels are `C-g w` (Greed's
+  own). It lands one cursor, even with several.
 - `C-s` / `A-s` with nothing selected select the word first; the next
   press adds the match, as in VS Code. The word is the one the cursor is
   in or just after; in blanks with no word beside it, nothing is selected.
@@ -432,14 +444,14 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 124 tests over: every motion selecting and selecting
+`greed test` runs 129 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with
 `flash-type-at-cursor`), shrinking and crossing the
 anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
-object (inside one, and the nearest one when the cursor's in none), syntax node selection, surround, the jump and its cancelling,
+object (inside one, and the nearest one when the cursor's in none), syntax node selection, surround, the flash.nvim-style jump (searching as you type, labels that never clash with the search and stay put, smart case, enter, backspace and cancelling),
 marks, case changes, copying (letting go and keeping the selection, the line with nothing selected, one piece per cursor), cut, paste and taking it back, moving, duplicating and joining lines (multiline and with several cursors, each one undo step), commenting and uncommenting, search and replace, line
 prompts, multiple cursors, macros, registers, counts, folds, repeating a
 change, splits and panes, buffers, saving, the key conflicts above, typing
