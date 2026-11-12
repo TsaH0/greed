@@ -48,8 +48,8 @@ range has an anchor and a head, and the cursor sits between characters.
 
 - **Every plain motion selects what it moved over**, and pressed again it
   selects the next piece on its own rather than growing the last one.
-  `C-h` `C-j` `C-k` `C-l` (and their alt opposites) are the exception:
-  they only move the cursor, dropping any selection.
+  `C-h` `C-j` `C-k` `C-l` and `C-v` (and their alt opposites) are the
+  exception: they only move the cursor, dropping any selection.
 - **Shift carries the selection on:** `C-w C-S-w C-S-w` selects three
   words; `A-a A-S-a A-S-a` three lines. The anchor stays where it was, and
   going back past it shrinks the selection, then grows it the other way.
@@ -100,7 +100,7 @@ it carries the selection on instead.
 | `C-w` | Next word start | `A-w` | Previous word start |
 | `C-e` | Next word end | `A-e` | Previous word end |
 | `C-a` | First non-blank, then line start, then the line before | `A-a` | Line end, then the next line |
-| `C-v` | Page down | `A-v` | Page up |
+| `C-v` | Page down (moves only) | `A-v` | Page up |
 | `C-g g` | To the buffer's start (`C-g G` extends) | `A-g g` | To its end (`A-g G` extends) |
 
 Up and down keep the column they started from.
@@ -432,7 +432,7 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 123 tests over: every motion selecting and selecting
+`greed test` runs 124 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with

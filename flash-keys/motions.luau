@@ -124,6 +124,8 @@ local MOVES = {
 	["char-right"] = true,
 	["line-down"] = true,
 	["line-up"] = true,
+	["page-down"] = true,
+	["page-up"] = true,
 }
 
 -- Defines `flash-NAME` and `flash-select-NAME` running `run(ctx, shift)`.
@@ -231,7 +233,11 @@ local WRAPPED: { [string]: string } = {
 
 for name, command in WRAPPED do
 	pair(name, function(ctx, shift)
-		selection.wrap(ctx, command, shift)
+		if MOVES[name] then
+			selection.wrap_move(ctx, command, shift)
+		else
+			selection.wrap(ctx, command, shift)
+		end
 	end)
 end
 

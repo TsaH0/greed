@@ -187,6 +187,26 @@ function M.wrap(ctx: greed.Context, command: string, shift: boolean?, keep: bool
 	end
 end
 
+--- Runs `command`, one of Greed's that moves the cursors, as a move only:
+--- with shift (or while selecting) each anchor stays; otherwise each range
+--- becomes a cursor where the command left it.
+function M.wrap_move(ctx: greed.Context, command: string, shift: boolean?)
+	local view = ctx.view
+	local extend = M.active(view, shift)
+	local before = view:selection()
+	greed.run(command, { count = ctx.count })
+	if greed.view():id() ~= view:id() or view:buffer():id() ~= ctx.buffer:id() then
+		return
+	end
+	local after = view:selection()
+	for i, range in after.ranges do
+		local anchor = if extend and before.ranges[i] then before.ranges[i].anchor else range.head
+		after.ranges[i] = { anchor = anchor, head = range.head }
+	end
+	view:set_selection(after)
+	M.remember(view)
+end
+
 --- Collapses every range onto its anchor (`to_anchor`) or its head, and
 --- turns persistent selection off.
 function M.collapse(view: greed.View, to_anchor: boolean)

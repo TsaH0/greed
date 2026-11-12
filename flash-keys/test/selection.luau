@@ -168,6 +168,34 @@ test("motions take multi-byte characters whole", function(t)
 	check(t, "|日本 語", "ctrl-e", "^日本| 語")
 end)
 
+test("ctrl-v and alt-v only page down and up, shift and ctrl-space extending", function(t)
+	local lines = {}
+	for i = 1, 2000 do
+		lines[i] = `line {i}`
+	end
+	local text = table.concat(lines, "\n")
+	t:buffer("|" .. text)
+	greed.mode.set("flash")
+	t:keys("ctrl-v")
+	local sel = greed.view():selection().ranges[1]
+	assert(sel.head > 0 and sel.anchor == sel.head, `moved without selecting: {sel.anchor} {sel.head}`)
+	t:keys("alt-v")
+	sel = greed.view():selection().ranges[1]
+	assert(sel.head == 0 and sel.anchor == 0, `back up: {sel.anchor} {sel.head}`)
+	t:keys("ctrl-V")
+	sel = greed.view():selection().ranges[1]
+	assert(sel.anchor == 0 and sel.head > 0, "shift extends")
+	t:keys("alt-S ctrl-g g ctrl-space ctrl-g g ctrl-space ctrl-v")
+	local after = greed.view():selection().ranges[1]
+	assert(after.anchor == 0 and after.head > 0, `ctrl-space extends: {after.anchor} {after.head}`)
+	-- With a selection, it's dropped.
+	t:buffer("|" .. text)
+	greed.mode.set("flash")
+	t:keys("ctrl-w ctrl-v")
+	sel = greed.view():selection().ranges[1]
+	assert(sel.anchor == sel.head, "dropped")
+end)
+
 test("page and document motions select from the cursor, shift extending", function(t)
 	check(t, "a|b\ncd\nef", "alt-g g", "a^b\ncd\nef|")
 	check(t, "ab\ncd\ne|f", "ctrl-g g", "|ab\ncd\ne^f")
