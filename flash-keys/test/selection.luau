@@ -185,7 +185,7 @@ test("ctrl-v and alt-v only page down and up, shift and ctrl-space extending", f
 	t:keys("ctrl-V")
 	sel = greed.view():selection().ranges[1]
 	assert(sel.anchor == 0 and sel.head > 0, "shift extends")
-	t:keys("alt-S ctrl-g g ctrl-space ctrl-g g ctrl-space ctrl-v")
+	t:keys("alt-S ctrl-g g ctrl-space ctrl-v")
 	local after = greed.view():selection().ranges[1]
 	assert(after.anchor == 0 and after.head > 0, `ctrl-space extends: {after.anchor} {after.head}`)
 	-- With a selection, it's dropped.
@@ -196,10 +196,15 @@ test("ctrl-v and alt-v only page down and up, shift and ctrl-space extending", f
 	assert(sel.anchor == sel.head, "dropped")
 end)
 
-test("page and document motions select from the cursor, shift extending", function(t)
-	check(t, "a|b\ncd\nef", "alt-g g", "a^b\ncd\nef|")
-	check(t, "ab\ncd\ne|f", "ctrl-g g", "|ab\ncd\ne^f")
-	check(t, "ab\ncd\ne|f", "ctrl-w ctrl-g G", "|ab\ncd\ne^f")
+test("C-g g and A-g g only go to the start and end, shift extending", function(t)
+	check(t, "a|b\ncd\nef", "alt-g g", "ab\ncd\nef|")
+	check(t, "ab\ncd\ne|f", "ctrl-g g", "|ab\ncd\nef")
+	check(t, "a|b\ncd\nef", "ctrl-w ctrl-g g", "|ab\ncd\nef")
+	check(t, "ab\ncd\ne|f", "ctrl-g G", "|ab\ncd\ne^f")
+	check(t, "a|b\ncd\nef", "alt-g G", "a^b\ncd\nef|")
+	check(t, "a|b\ncd\nef", "ctrl-space alt-g g", "a^b\ncd\nef|")
+	-- Typing after it types there, replacing nothing.
+	check(t, "ab\ncd\ne|f", "ctrl-g g x", "x|ab\ncd\nef")
 end)
 
 test("a motion with nowhere to go leaves the selection as it was", function(t)

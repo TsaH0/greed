@@ -30,6 +30,9 @@ core.modeless.define({
 	pairs = true,
 })
 
+-- After the style, which the lsp plugin makes the completion menu's mode from.
+require("@self/completion")
+
 return {
 	selection = selection,
 	find = find,

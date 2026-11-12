@@ -126,6 +126,8 @@ local MOVES = {
 	["line-up"] = true,
 	["page-down"] = true,
 	["page-up"] = true,
+	["doc-start"] = true,
+	["doc-end"] = true,
 }
 
 -- Defines `flash-NAME` and `flash-select-NAME` running `run(ctx, shift)`.

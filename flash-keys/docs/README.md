@@ -48,8 +48,8 @@ range has an anchor and a head, and the cursor sits between characters.
 
 - **Every plain motion selects what it moved over**, and pressed again it
   selects the next piece on its own rather than growing the last one.
-  `C-h` `C-j` `C-k` `C-l` and `C-v` (and their alt opposites) are the
-  exception: they only move the cursor, dropping any selection.
+  `C-h` `C-j` `C-k` `C-l`, `C-v` and `C-g g` (and their alt opposites)
+  are the exception: they only move the cursor, dropping any selection.
 - **Shift carries the selection on:** `C-w C-S-w C-S-w` selects three
   words; `A-a A-S-a A-S-a` three lines. The anchor stays where it was, and
   going back past it shrinks the selection, then grows it the other way.
@@ -101,7 +101,7 @@ it carries the selection on instead.
 | `C-e` | Next word end | `A-e` | Previous word end |
 | `C-a` | First non-blank, then line start, then the line before | `A-a` | Line end, then the next line |
 | `C-v` | Page down (moves only) | `A-v` | Page up |
-| `C-g g` | To the buffer's start (`C-g G` extends) | `A-g g` | To its end (`A-g G` extends) |
+| `C-g g` | To the buffer's start, moving only (`C-g G` extends) | `A-g g` | To its end (`A-g G` extends) |
 
 Up and down keep the column they started from.
 
@@ -244,7 +244,7 @@ typing to narrow the matches down.
 | `C-g C-t` | Type definition |
 | `A-g A-d` | Back from a definition (the jump list) |
 | `C-g C-o` / `A-g A-o` | Back / forward through the jump list |
-| `C-g g` / `A-g g` | Buffer start / end |
+| `C-g g` / `A-g g` | Buffer start / end (moving only; `C-g G` / `A-g G` extend) |
 | `C-g l` | Go to the line typed |
 | `C-g r` | Go up or down the lines typed, `+3` or `-3` |
 | `C-g n` / `A-g n` | Next / previous problem |
@@ -304,6 +304,22 @@ as Emacs's `C-u`: `C-c n 3 C-w` moves three words.
 Greed's leader (`space f` and the rest in Helix) opens with `alt-space`
 here: `alt-space f` finds a file. Keys bound for the leader or for the
 typing role in your config work in this style too.
+
+## Completion
+
+When the completion menu is up (a language server's suggestions, or words
+from open files):
+
+| Keys | |
+|---|---|
+| `tab` / `shift-tab` (or the arrows) | The next / previous suggestion; the first is chosen as the menu opens |
+| `enter` | Put the chosen suggestion in |
+| Typing, `backspace` | Narrow the suggestions; the menu stays |
+| `esc` | Close the menu |
+| Any other key | Closes the menu and does what it always does: `C-w` selects the next word, `C-a` goes back along the line, `C-n` searches, `C-p` goes to the next pane |
+
+With no menu, `tab` types a tab (or indents a multi-line selection) as
+usual.
 
 ## Terminals and the kitty keyboard protocol
 
@@ -444,14 +460,14 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 129 tests over: every motion selecting and selecting
+`greed test` runs 135 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with
 `flash-type-at-cursor`), shrinking and crossing the
 anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
-object (inside one, and the nearest one when the cursor's in none), syntax node selection, surround, the flash.nvim-style jump (searching as you type, labels that never clash with the search and stay put, smart case, enter, backspace and cancelling),
+object (inside one, and the nearest one when the cursor's in none), syntax node selection, surround, the completion menu (tab through it, other keys closing it and doing their own thing), the flash.nvim-style jump (searching as you type, labels that never clash with the search and stay put, smart case, enter, backspace and cancelling),
 marks, case changes, copying (letting go and keeping the selection, the line with nothing selected, one piece per cursor), cut, paste and taking it back, moving, duplicating and joining lines (multiline and with several cursors, each one undo step), commenting and uncommenting, search and replace, line
 prompts, multiple cursors, macros, registers, counts, folds, repeating a
 change, splits and panes, buffers, saving, the key conflicts above, typing

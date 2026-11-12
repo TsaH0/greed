@@ -317,7 +317,8 @@ local TYPING = {
 }
 
 greed.on("command.run", function(event: greed.CommandRun)
-	if greed.mode.get() ~= "flash" then
+	local mode = greed.mode.get()
+	if mode ~= "flash" and mode ~= "completion-flash" then
 		return
 	end
 	local view = greed.view()
