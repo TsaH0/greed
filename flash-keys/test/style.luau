@@ -46,9 +46,9 @@ test("in flash, its own keys win over the keys bound for every mode", function(t
 		["alt-w"] = "flash-word-prev",
 		["alt-enter"] = "flash-jump-back",
 		["ctrl-enter"] = "flash-jump",
-		["ctrl-m ctrl-b"] = "flash-surround-b",
-		["alt-m alt-b"] = "flash-unsurround-b",
-		["alt-t alt-r"] = "flash-around-r",
+		["ctrl-t ctrl-b"] = "flash-surround-b",
+		["alt-t alt-b"] = "flash-unsurround-b",
+		["alt-m alt-r"] = "flash-around-r",
 	}
 	for keys, command in mine do
 		local got = greed.keymap.resolve(keys)
@@ -156,4 +156,24 @@ test("unloading the plugin takes its style and keys away, and reloading brings t
 	greed.mode.set("flash")
 	t:keys("ctrl-W")
 	t:expect("^abc|")
+end)
+
+test("the cursor is a block when typing and in the completion menu, after a reload too", function(t)
+	t:buffer("|abc")
+	assert(greed.mode.cursor_of("flash") == "block", tostring(greed.mode.cursor_of("flash")))
+	assert(greed.mode.cursor_of("completion-flash") == "block", "completion")
+	local dir = greed.plugin.dirs()["flash-keys"]
+	greed.plugin.load(dir)
+	t:wait(0)
+	assert(greed.mode.cursor_of("flash") == "block", "after a reload")
+	assert(greed.mode.cursor_of("completion-flash") == "block", "completion after a reload")
+end)
+
+test("flash-cursor bar makes it a bar, and block puts it back", function(t)
+	t:buffer("|abc")
+	greed.option.set("flash-cursor", "bar")
+	assert(greed.mode.cursor_of("flash") == "bar", "bar")
+	assert(greed.mode.cursor_of("completion-flash") == "bar", "completion bar")
+	greed.option.set("flash-cursor", "block")
+	assert(greed.mode.cursor_of("flash") == "block", "block")
 end)

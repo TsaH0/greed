@@ -36,7 +36,9 @@ remove the `editing-style` line), and delete the folder to remove it.
 ## How selecting works
 
 Selection first, as in Helix and Kakoune: you select, then act. Every
-range has an anchor and a head, and the cursor sits between characters.
+range has an anchor and a head, and positions sit between characters.
+The cursor is drawn as a block on the character after its position
+(`flash-cursor` set to `"bar"` draws a bar there instead).
 
 | Press | Does | Again |
 |---|---|---|
@@ -141,47 +143,48 @@ moves on to the next match.
 
 ### Text objects
 
-`C-t` then a key selects inside the object around each cursor; `A-t`
+`C-m` then a key selects inside the object around each cursor (`C-c i`
+then the key in terminals that send `C-m` as `enter`); `A-m`
 then a key selects around it. The second key works with or without its
-modifier (`C-t C-b` or `C-t b`). Shifted motions carry an object's
+modifier (`C-m C-b` or `C-m b`). Shifted motions carry an object's
 selection on, and typing replaces it.
 
 The cursor needn't be inside the object. As Vim does with quotes (and
 targets.vim and mini.ai with everything), when it's in none Flash takes
 the next one that starts on the cursor's line, or else the nearest one
-before or after: on `|foo(a, b)`, `C-t C-b` selects `a, b`, and at the end
+before or after: on `|foo(a, b)`, `C-m C-b` selects `a, b`, and at the end
 of `foo(a, b) x|` it reaches back for the same. This works for brackets,
 quotes, tags and functions; words, lines, paragraphs and sentences are
 always around the cursor.
 
 | Inside | Around | Object |
 |---|---|---|
-| `C-t C-b` | `A-t A-b` | Parentheses `()` (Vim's `ib`) |
-| `C-t C-r` | `A-t A-r` | Square brackets `[]` |
-| `C-t C-a` | `A-t A-a` | Angle brackets `<>` |
-| `C-t C-c` | `A-t A-c` | Curly braces `{}` |
-| `C-t C-n` | `A-t A-n` | The nearest bracket pair of any kind |
-| `C-t C-q` | `A-t A-q` | Quotes: the innermost `"`, `'` or `` ` `` pair |
-| `C-t C-w` | `A-t A-w` | Word |
-| `C-t C-p` | `A-t A-p` | Paragraph |
-| `C-t C-s` | `A-t A-s` | Sentence |
-| `C-t C-f` | `A-t A-f` | Function (from the syntax tree) |
-| `C-t C-l` | `A-t A-l` | Line (inside: without its indent and line break) |
-| `C-t C-o` | `A-t A-o` | Syntax node (around: the node around it) |
-| `C-t C-x` | `A-t A-x` | HTML or XML tag |
-| `C-t W` | `A-t W` | WORD (punctuation and all, as `#include`) |
-| `C-t d` | `A-t d` | Number |
-| `C-t i` | `A-t i` | Indented block |
-| `C-t g` | `A-t g` | Argument (from the syntax tree) |
-| `C-t t` | `A-t t` | Type (from the syntax tree) |
-| `C-t /` | `A-t /` | Comment (from the syntax tree) |
+| `C-m C-b` | `A-m A-b` | Parentheses `()` (Vim's `ib`) |
+| `C-m C-r` | `A-m A-r` | Square brackets `[]` |
+| `C-m C-a` | `A-m A-a` | Angle brackets `<>` |
+| `C-m C-c` | `A-m A-c` | Curly braces `{}` |
+| `C-m C-n` | `A-m A-n` | The nearest bracket pair of any kind |
+| `C-m C-q` | `A-m A-q` | Quotes: the innermost `"`, `'` or `` ` `` pair |
+| `C-m C-w` | `A-m A-w` | Word |
+| `C-m C-p` | `A-m A-p` | Paragraph |
+| `C-m C-s` | `A-m A-s` | Sentence |
+| `C-m C-f` | `A-m A-f` | Function (from the syntax tree) |
+| `C-m C-l` | `A-m A-l` | Line (inside: without its indent and line break) |
+| `C-m C-o` | `A-m A-o` | Syntax node (around: the node around it) |
+| `C-m C-x` | `A-m A-x` | HTML or XML tag |
+| `C-m W` | `A-m W` | WORD (punctuation and all, as `#include`) |
+| `C-m d` | `A-m d` | Number |
+| `C-m i` | `A-m i` | Indented block |
+| `C-m g` | `A-m g` | Argument (from the syntax tree) |
+| `C-m t` | `A-m t` | Type (from the syntax tree) |
+| `C-m /` | `A-m /` | Comment (from the syntax tree) |
 
 ### Surround
 
-`C-m` then a pair's key wraps; `A-m` then a key takes the pair away. The
+`C-t` then a pair's key wraps; `A-t` then a key takes the pair away. The
 keys are the text objects' letters.
 
-| Wrap (`C-m` then) | Take away (`A-m` then) | Pair |
+| Wrap (`C-t` then) | Take away (`A-t` then) | Pair |
 |---|---|---|
 | `C-b` or `b` | `A-b` or `b` | `( )` |
 | `C-r` or `r` | `A-r` or `r` | `[ ]` |
@@ -191,12 +194,12 @@ keys are the text objects' letters.
 | `'`, `` ` `` | | Single quotes, backticks |
 | | `A-n` or `n` | The nearest pair of any kind |
 
-- `C-m` wraps each selection, or with nothing selected the word at the
+- `C-t` wraps each selection, or with nothing selected the word at the
   cursor, and leaves it selected with its pair.
-- `A-m` takes away the pair around each cursor, or the nearest one when
-  the cursor's in none, as `C-t` finds objects.
-- `C-m C-s` swaps a pair: the old one's key, then the new one's
-  (`C-m C-s b r` turns `( )` into `[ ]`).
+- `A-t` takes away the pair around each cursor, or the nearest one when
+  the cursor's in none, as `C-m` finds objects.
+- `C-t C-s` swaps a pair: the old one's key, then the new one's
+  (`C-t C-s b r` turns `( )` into `[ ]`).
 - Each is one step to undo. `C-S-t a` / `r` / `d` and `C-c e a` / `r` /
   `d` still work, typing the bracket itself.
 
@@ -369,9 +372,9 @@ arrive as themselves. Use the fallbacks:
 |---|---|---|
 | `C-i` | `tab` | `tab` indents a multi-line selection; `C-c e =` reindents |
 | `C-enter`, `C-S-enter` | `enter` | `C-g j` jumps |
-| `C-m` | `enter` | Surround: `C-S-t a` / `r` / `d` or `C-c e a` / `r` / `d` |
-| `C-[` / `A-[` | `esc` / the start of an escape code | `C-t C-o` selects the node, `A-t A-o` the one around it, `C-t -` shrinks |
-| `C-]` / `A-]` | `C-]` works; `alt-]` may not | `C-t ]` / `C-t [` next / previous sibling |
+| `C-m` | `enter` | Text objects: `C-c i` then the key (inside), `C-c a` then the key (around) |
+| `C-[` / `A-[` | `esc` / the start of an escape code | `C-c i o` selects the node, `C-c a o` the one around it, `C-c i -` shrinks |
+| `C-]` / `A-]` | `C-]` works; `alt-]` may not | `C-c i ]` / `C-c i [` next / previous sibling |
 | `C-'` / `A-'` | Nothing usable | `C-g m x` / `C-g ' x` |
 | `C-;`, `C-.`, `C-=`, `C--`, `C-/`, `C-\` | Often nothing, or another key | Finds: `C-f` / `A-f` (no fallback for till and repeat); folds: `C-c z c` / `C-c z o`; case: `C-c c`; search: `C-c s b` |
 | `C-S-letter` motions | The same as `C-letter` | `C-space`, then the plain motions, `C-space` to stop; or the `A-S-` twin (`A-S-k` for `C-S-j`) |
@@ -380,7 +383,7 @@ arrive as themselves. Use the fallbacks:
 | `C-S-o` | `C-o`, which opens a line | `C-c e j` (`A-S-o` works: `C-c e O` too) |
 | `C-S-p` / `C-S-b` | `C-p` next pane / `C-b` next buffer | `C-x C-f` / `C-x b` |
 | `C-S-r` | `C-r`, replace next | `C-c l n` |
-| `C-S-t` | `C-t`, the text objects (so `a` selects inside `<>`) | `C-c e a` / `r` / `d` |
+| `C-S-t` | `C-m`, the text objects (so `a` selects inside `<>`) | `C-c e a` / `r` / `d` |
 | `` C-` `` | Usually `C-space` (both send the same byte), which stops selecting | `C-c c >` / `C-c c <` |
 | `C-,` | A plain `,`, which types | `C-c e .` |
 | `C-h` | Some terminals send it for `backspace` | `backspace` still deletes |
@@ -398,14 +401,14 @@ were three keys deep under `C-c e`, while case changes had `C-u` and
   three keys: a prefix (`C-g`, `C-x`, `C-c x`), then one or two.
 - **Shift makes a sibling of the plain key.** `C-d` deletes and `C-S-d`
   duplicates; `C-o` opens a line and `C-S-o` joins one; `C-x` is the file
-  prefix and `C-S-x` cuts; `C-t` selects objects and `C-S-t` changes what's
+  prefix and `C-S-x` cuts; `C-m` selects objects and `C-S-t` changes what's
   around them; `C-p` and `C-b` step through panes and buffers, and
   `C-S-p` and `C-S-b` pick from them. On motions shift still selects.
 - **Ctrl and alt stay opposites:** lines up and down (`C-u` / `A-u`),
   duplicate below and above, join next and previous, comment and
   uncomment, case forward and back, copy-and-let-go and copy-and-keep.
 - **The home row keeps the motions.** `C-h j k l w e a f ;` and `C-enter`,
-  `C-t`, `C-s` are as they were.
+  `C-m`, `C-s` are as they were.
 - **Copy lets go.** After copying you usually move on, so `A-c` collapses
   the selection; `A-S-c` keeps it for when you don't.
 - **Rare things live behind prefixes and `A-x`:** case styles, plugins,
@@ -448,9 +451,9 @@ unchanged. The tests check both sides.
 | `C-space` | The leader in the VS Code style; the leader from a terminal | Start and stop selecting. The leader is `alt-space` |
 | `A-h` `A-j` `A-k` `A-l` | Move to the pane on that side | Character and line motions. Panes: `alt` and the arrows (still Greed's), `C-p` / `A-p`, `C-x o` |
 | `A-p` | The pane mode | Previous pane. Pane mode: `C-x p` |
-| `A-t` | The tab mode | Around text objects. Tab mode: `C-x t` |
+| `A-t` | The tab mode | Take away a surrounding pair. Tab mode: `C-x t` |
 | `alt-space` | The next pane layout | The leader. Layouts: `C-x l` |
-| `A-m` | Swap the pane with the main one | Take away a surrounding pair. Swap: `C-x m` |
+| `A-m` | Swap the pane with the main one | Around text objects. Swap: `C-x m` |
 | `A-f` | Hide or show the floating views | Find backward. Floats: `C-x f` |
 | `A-F` | This file in a floating view | Select back through a character. `C-x F` |
 | `A-w` / `A-W` | The next float layout / pick a float | Previous word / select to it. `C-x w` / `C-x W` |
@@ -494,14 +497,14 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 150 tests over: every motion selecting and selecting
+`greed test` runs 153 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with
 `flash-type-at-cursor`), shrinking and crossing the
 anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
-object (inside one, and the nearest one when the cursor's in none), syntax node selection, the new objects (WORD, number, indented block, argument, type, comment), surround on `C-m` and `A-m` (every pair, the word at the cursor, several cursors, the nearest pair, swapping, one undo step), the completion menu (tab through it, other keys closing it and doing their own thing), the flash.nvim-style jump (searching as you type, labels that never clash with the search and stay put, smart case, enter, backspace and cancelling),
+object (inside one, and the nearest one when the cursor's in none), syntax node selection, the new objects (WORD, number, indented block, argument, type, comment), surround on `C-t` and `A-t` (every pair, the word at the cursor, several cursors, the nearest pair, swapping, one undo step), the completion menu (tab through it, other keys closing it and doing their own thing), the flash.nvim-style jump (searching as you type, labels that never clash with the search and stay put, smart case, enter, backspace and cancelling),
 marks, case changes, copying (letting go and keeping the selection, the line with nothing selected, one piece per cursor), cut, paste and taking it back, moving, duplicating and joining lines (multiline and with several cursors, each one undo step), commenting and uncommenting, search and replace, line
 prompts, multiple cursors, macros, registers, counts, folds, repeating a
 change, splits and panes, buffers, saving, the key conflicts above, typing

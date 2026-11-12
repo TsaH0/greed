@@ -147,7 +147,7 @@ end)
 test("typing replaces a selection made on purpose", function(t)
 	check(t, "|one two", "ctrl-W x", "x|two")
 	check(t, "|one two", "ctrl-w ctrl-W x", "x|")
-	check(t, "a (b|c) d", "ctrl-t ctrl-b x", "a (x|) d")
+	check(t, "a (b|c) d", "ctrl-m ctrl-b x", "a (x|) d")
 end)
 
 test("ctrl-d deletes what a motion selected, or a character", function(t)

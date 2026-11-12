@@ -34,6 +34,30 @@ core.modeless.define({
 -- After the style, which the lsp plugin makes the completion menu's mode from.
 require("@self/completion")
 
+-- The cursor is a block by default, in typing and in the completion menu
+-- alike; "bar" with the flash-cursor option. core.modeless.define makes
+-- the style's mode a bar, and the menu's mode copies it, so this comes
+-- after both, and again whenever the option changes.
+greed.option.define({
+	name = "flash-cursor",
+	doc = 'The flash style\'s cursor: "block" or "bar"',
+	default = "block",
+	choices = { "block", "bar" },
+})
+
+local function cursor()
+	local shape = greed.option.get("flash-cursor") :: string
+	greed.mode.set_cursor("flash", shape)
+	greed.mode.set_cursor("completion-flash", shape)
+end
+
+cursor()
+greed.on("option.changed", function(event: greed.OptionChanged)
+	if event.name == "flash-cursor" then
+		cursor()
+	end
+end)
+
 return {
 	selection = selection,
 	find = find,

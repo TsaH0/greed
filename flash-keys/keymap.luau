@@ -101,22 +101,22 @@ M.keys = {
 	["alt-r"] = "flash-replace-prev",
 
 	-- Jumping
-	-- Jumping, as flash.nvim (ctrl-m, which terminals without the kitty
-	-- protocol send as enter, is surround's now; C-g j jumps there).
+	-- Jumping, as flash.nvim (ctrl-enter, which terminals without the
+	-- kitty protocol send as enter; C-g j jumps there).
 	["ctrl-enter"] = "flash-jump",
 	["ctrl-shift-enter"] = "flash-select-jump",
 	["alt-enter"] = "flash-jump-back",
 	["ctrl-g j"] = "flash-jump",
 
-	-- Surround: ctrl-m then a pair's key wraps, alt-m then one takes it
-	-- away, ctrl-m ctrl-s then the old and the new swaps.
-	["ctrl-m '"] = "flash-surround-single",
-	["ctrl-m `"] = "flash-surround-backtick",
-	['ctrl-m "'] = "flash-surround-q",
-	["ctrl-m ctrl-s"] = "flash-surround-change",
-	["ctrl-m s"] = "flash-surround-change",
-	["alt-m alt-n"] = "flash-unsurround-n",
-	["alt-m n"] = "flash-unsurround-n",
+	-- Surround: ctrl-t then a pair's key wraps, alt-t then one takes it
+	-- away, ctrl-t ctrl-s then the old and the new swaps.
+	["ctrl-t '"] = "flash-surround-single",
+	["ctrl-t `"] = "flash-surround-backtick",
+	['ctrl-t "'] = "flash-surround-q",
+	["ctrl-t ctrl-s"] = "flash-surround-change",
+	["ctrl-t s"] = "flash-surround-change",
+	["alt-t alt-n"] = "flash-unsurround-n",
+	["alt-t n"] = "flash-unsurround-n",
 
 	-- Punctuation
 	["ctrl-\\"] = "toggle-comment",
@@ -361,11 +361,11 @@ M.keys = {
 
 	-- Fallbacks for terminals without the kitty keyboard protocol, which
 	-- can't send ctrl-[ (it's esc), alt-[ alt-] (escape codes) or ctrl-'.
-	["ctrl-t ctrl-o"] = "flash-inside-o",
-	["alt-t alt-o"] = "flash-around-o",
-	["ctrl-t -"] = "flash-shrink",
-	["ctrl-t ]"] = "flash-sibling-next",
-	["ctrl-t ["] = "flash-sibling-prev",
+	["ctrl-m ctrl-o"] = "flash-inside-o",
+	["alt-m alt-o"] = "flash-around-o",
+	["ctrl-m -"] = "flash-shrink",
+	["ctrl-m ]"] = "flash-sibling-next",
+	["ctrl-m ["] = "flash-sibling-prev",
 } :: { [string]: string }
 
 for _, motion in MOTIONS do
@@ -376,30 +376,42 @@ for _, motion in MOTIONS do
 	M.keys[`alt-{string.upper(key)}`] = `flash-select-{alt}`
 end
 
--- Text objects: ctrl-t then ctrl-KEY (or KEY) inside, alt-t then alt-KEY
+-- Text objects: ctrl-m then ctrl-KEY (or KEY) inside, alt-m then alt-KEY
 -- (or KEY) around.
 for _, key in { "b", "r", "c", "a", "q" } do
-	M.keys[`ctrl-m ctrl-{key}`] = `flash-surround-{key}`
-	M.keys[`ctrl-m {key}`] = `flash-surround-{key}`
-	M.keys[`alt-m alt-{key}`] = `flash-unsurround-{key}`
-	M.keys[`alt-m {key}`] = `flash-unsurround-{key}`
+	M.keys[`ctrl-t ctrl-{key}`] = `flash-surround-{key}`
+	M.keys[`ctrl-t {key}`] = `flash-surround-{key}`
+	M.keys[`alt-t alt-{key}`] = `flash-unsurround-{key}`
+	M.keys[`alt-t {key}`] = `flash-unsurround-{key}`
 end
 
 for _, key in { "b", "a", "r", "c", "n", "q", "w", "p", "s", "f", "l", "x", "d", "i", "g", "t" } do
-	M.keys[`ctrl-t ctrl-{key}`] = `flash-inside-{key}`
-	M.keys[`ctrl-t {key}`] = `flash-inside-{key}`
-	M.keys[`alt-t alt-{key}`] = `flash-around-{key}`
-	M.keys[`alt-t {key}`] = `flash-around-{key}`
+	M.keys[`ctrl-m ctrl-{key}`] = `flash-inside-{key}`
+	M.keys[`ctrl-m {key}`] = `flash-inside-{key}`
+	M.keys[`alt-m alt-{key}`] = `flash-around-{key}`
+	M.keys[`alt-m {key}`] = `flash-around-{key}`
 end
-M.keys["ctrl-t W"] = "flash-inside-W"
-M.keys["ctrl-t ctrl-W"] = "flash-inside-W"
-M.keys["alt-t W"] = "flash-around-W"
-M.keys["alt-t alt-W"] = "flash-around-W"
-M.keys["ctrl-t /"] = "flash-inside-comment"
-M.keys["ctrl-t ctrl-/"] = "flash-inside-comment"
-M.keys["alt-t /"] = "flash-around-comment"
-M.keys["alt-t alt-/"] = "flash-around-comment"
-M.keys["ctrl-t o"] = "flash-inside-o"
-M.keys["alt-t o"] = "flash-around-o"
+M.keys["ctrl-m W"] = "flash-inside-W"
+M.keys["ctrl-m ctrl-W"] = "flash-inside-W"
+M.keys["alt-m W"] = "flash-around-W"
+M.keys["alt-m alt-W"] = "flash-around-W"
+M.keys["ctrl-m /"] = "flash-inside-comment"
+M.keys["ctrl-m ctrl-/"] = "flash-inside-comment"
+M.keys["alt-m /"] = "flash-around-comment"
+M.keys["alt-m alt-/"] = "flash-around-comment"
+M.keys["ctrl-m o"] = "flash-inside-o"
+
+-- The objects again on C-c i (inside) and C-c a (around), for terminals
+-- without the kitty protocol, which send ctrl-m as enter.
+for _, key in { "b", "a", "r", "c", "n", "q", "w", "p", "s", "f", "l", "x", "d", "i", "g", "t", "o", "W" } do
+	M.keys[`ctrl-c i {key}`] = `flash-inside-{key}`
+	M.keys[`ctrl-c a {key}`] = `flash-around-{key}`
+end
+M.keys["ctrl-c i /"] = "flash-inside-comment"
+M.keys["ctrl-c i ]"] = "flash-sibling-next"
+M.keys["ctrl-c i ["] = "flash-sibling-prev"
+M.keys["ctrl-c i -"] = "flash-shrink"
+M.keys["ctrl-c a /"] = "flash-around-comment"
+M.keys["alt-m o"] = "flash-around-o"
 
 return M
