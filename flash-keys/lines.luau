@@ -111,4 +111,17 @@ for _, back in { false, true } do
 	})
 end
 
+greed.command({
+	name = "flash-copy-file",
+	doc = "Copy the whole buffer, leaving the cursor and selection where they are",
+	run = function(ctx)
+		local view = ctx.view
+		local was = view:selection()
+		view:set_selection({ ranges = { { anchor = 0, head = ctx.buffer:len() } }, primary = 1 })
+		greed.run("copy")
+		view:set_selection(was)
+		greed.echo(`Copied {ctx.buffer:line_count()} lines`)
+	end,
+})
+
 return M

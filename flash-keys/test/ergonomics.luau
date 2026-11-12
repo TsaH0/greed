@@ -93,6 +93,13 @@ test("alt-C copies and keeps the selection, so shift carries it on", function(t)
 	t:expect("one twoone |")
 end)
 
+test("C-x y copies the whole file, leaving the cursor where it was", function(t)
+	check(t, "ab\nc|d", "ctrl-x y", "ab\nc|d")
+	t:keys("alt-g g ctrl-y")
+	t:expect("ab\ncdab\ncd|")
+	check(t, "a^b|c", "ctrl-x y", "a^b|c")
+end)
+
 test("ctrl-X cuts the selection, or the line with nothing selected", function(t)
 	check(t, "^ab| cd", "ctrl-X alt-a ctrl-space ctrl-y", " cdab|")
 	check(t, "ab\nc|d\nef", "ctrl-X", "ab\n|ef")

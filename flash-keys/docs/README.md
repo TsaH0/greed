@@ -186,6 +186,7 @@ deletes one. `C-c e a`, `C-c e r` and `C-c e d` do the same.
 | `` C-` `` | Case: lower, UPPER, Title | `` A-` `` | Case the other way round |
 | `C-z` | Undo | `A-z` | Redo |
 | `A-c` | Copy the selection (the line with nothing selected) and stop selecting | `A-S-c` | Copy, keeping the selection |
+| `C-x y` | Copy the whole file | | |
 | `C-S-x` | Cut the selection, or the line with nothing selected | | |
 | `C-y` | Paste, replacing the selection (whole lines go above) | `A-y` | Take the paste back, if it's still the last thing done |
 | `C-r` | Replace the next match of the search | `A-r` | Replace the previous match |
@@ -266,6 +267,7 @@ typing to narrow the matches down.
 | `C-x k` | Close the buffer |
 | `C-x :` | The command line, for Greed's `:` commands |
 | `C-x h` | Select everything |
+| `C-x y` | Copy the whole file, leaving the cursor where it is |
 | `C-x u` | The undo tree |
 | `C-x C-c` | Quit, asking about unsaved files |
 | `C-x p` / `C-x t` | The pane mode / the tab mode (`alt-p` / `alt-t` elsewhere) |
@@ -460,7 +462,7 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 135 tests over: every motion selecting and selecting
+`greed test` runs 136 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with

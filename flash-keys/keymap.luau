@@ -154,6 +154,7 @@ M.keys = {
 	["ctrl-x :"] = "command-line",
 	["ctrl-x ctrl-c"] = "quit-ask",
 	["ctrl-x h"] = "select-all",
+	["ctrl-x y"] = "flash-copy-file",
 	-- Extend mode: plain motions carry the selection on, as shift does,
 	-- until ctrl-space. For terminals that can't send ctrl with shift.
 	["ctrl-x space"] = "flash-toggle-selection",
