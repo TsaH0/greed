@@ -70,6 +70,8 @@ export type Object = {
 	--- quotes whose next and last pairs to look at, "tag", or a syntax
 	--- tree object ("function").
 	seek: ({ string } | string)?,
+	--- The end of its commands' names, when it isn't the letter.
+	command: string?,
 }
 
 -- A place inside the object that starts or ends nearest `pos` on each
@@ -159,27 +161,43 @@ M.objects = {
 	f = { name = "function", key = "f", seek = "function" },
 	l = { name = "line", find = line },
 	x = { name = "HTML or XML tag", key = "x", seek = "tag" },
+	W = { name = "WORD (punctuation and all)", key = "W" },
+	d = { name = "number", key = "d" },
+	i = { name = "indented block", key = "i" },
+	g = { name = "argument", key = "a", seek = "parameter" },
+	t = { name = "type", key = "t", seek = "type" },
+	["/"] = { name = "comment", key = "c", seek = "comment", command = "comment" },
 } :: { [string]: Object }
+
+--- The object for `letter` around `pos`, inside it or `around` it, or
+--- the nearest one when `pos` is in none.
+function M.range(buffer: Buffer, pos: number, letter: string, around: boolean): (number?, number?)
+	local object = M.objects[letter]
+	if object == nil then
+		return nil, nil
+	end
+	local from: number?, to: number?
+	if object.find then
+		from, to = object.find(buffer, pos, around)
+	else
+		from, to = core.textobjects.find(buffer, pos, object.key :: string, around)
+	end
+	if (from == nil or to == nil) and object.seek then
+		from, to = M.nearest(buffer, pos, object, around)
+	end
+	return from, to
+end
 
 for letter, object in M.objects do
 	for _, around in { false, true } do
 		local side = if around then "around" else "inside"
 		greed.command({
-			name = `flash-{side}-{letter}`,
+			name = `flash-{side}-{object.command or letter}`,
 			doc = `Select {side} the {object.name} around each cursor, `
 				.. "or the nearest one when it's in none",
 			run = function(ctx)
 				select_each(ctx, function(buffer, pos)
-					local from: number?, to: number?
-					if object.find then
-						from, to = object.find(buffer, pos, around)
-					else
-						from, to = core.textobjects.find(buffer, pos, object.key :: string, around)
-					end
-					if (from == nil or to == nil) and object.seek then
-						from, to = M.nearest(buffer, pos, object, around)
-					end
-					return from, to
+					return M.range(buffer, pos, letter, around)
 				end)
 			end,
 		})

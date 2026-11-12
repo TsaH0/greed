@@ -101,9 +101,22 @@ M.keys = {
 	["alt-r"] = "flash-replace-prev",
 
 	-- Jumping
-	["ctrl-m"] = "flash-jump",
-	["ctrl-M"] = "flash-select-jump",
-	["alt-m"] = "flash-jump-back",
+	-- Jumping, as flash.nvim (ctrl-m, which terminals without the kitty
+	-- protocol send as enter, is surround's now; C-g j jumps there).
+	["ctrl-enter"] = "flash-jump",
+	["ctrl-shift-enter"] = "flash-select-jump",
+	["alt-enter"] = "flash-jump-back",
+	["ctrl-g j"] = "flash-jump",
+
+	-- Surround: ctrl-m then a pair's key wraps, alt-m then one takes it
+	-- away, ctrl-m ctrl-s then the old and the new swaps.
+	["ctrl-m '"] = "flash-surround-single",
+	["ctrl-m `"] = "flash-surround-backtick",
+	['ctrl-m "'] = "flash-surround-q",
+	["ctrl-m ctrl-s"] = "flash-surround-change",
+	["ctrl-m s"] = "flash-surround-change",
+	["alt-m alt-n"] = "flash-unsurround-n",
+	["alt-m n"] = "flash-unsurround-n",
 
 	-- Punctuation
 	["ctrl-\\"] = "toggle-comment",
@@ -365,12 +378,27 @@ end
 
 -- Text objects: ctrl-t then ctrl-KEY (or KEY) inside, alt-t then alt-KEY
 -- (or KEY) around.
-for _, key in { "b", "a", "r", "c", "n", "q", "w", "p", "s", "f", "l", "x" } do
+for _, key in { "b", "r", "c", "a", "q" } do
+	M.keys[`ctrl-m ctrl-{key}`] = `flash-surround-{key}`
+	M.keys[`ctrl-m {key}`] = `flash-surround-{key}`
+	M.keys[`alt-m alt-{key}`] = `flash-unsurround-{key}`
+	M.keys[`alt-m {key}`] = `flash-unsurround-{key}`
+end
+
+for _, key in { "b", "a", "r", "c", "n", "q", "w", "p", "s", "f", "l", "x", "d", "i", "g", "t" } do
 	M.keys[`ctrl-t ctrl-{key}`] = `flash-inside-{key}`
 	M.keys[`ctrl-t {key}`] = `flash-inside-{key}`
 	M.keys[`alt-t alt-{key}`] = `flash-around-{key}`
 	M.keys[`alt-t {key}`] = `flash-around-{key}`
 end
+M.keys["ctrl-t W"] = "flash-inside-W"
+M.keys["ctrl-t ctrl-W"] = "flash-inside-W"
+M.keys["alt-t W"] = "flash-around-W"
+M.keys["alt-t alt-W"] = "flash-around-W"
+M.keys["ctrl-t /"] = "flash-inside-comment"
+M.keys["ctrl-t ctrl-/"] = "flash-inside-comment"
+M.keys["alt-t /"] = "flash-around-comment"
+M.keys["alt-t alt-/"] = "flash-around-comment"
 M.keys["ctrl-t o"] = "flash-inside-o"
 M.keys["alt-t o"] = "flash-around-o"
 

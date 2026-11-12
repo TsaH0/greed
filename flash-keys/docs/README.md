@@ -78,8 +78,8 @@ range has an anchor and a head, and the cursor sits between characters.
 - **Each cursor selects on its own**, so all of this works with several.
 - **Searches** (`C-n`, `A-n`) select their match; `C-S-n` and `A-S-n`
   extend the selection to it.
-- **Jumps** to a label (`C-m`), a mark or a line leave a cursor there;
-  `C-S-m` extends the selection to the label instead.
+- **Jumps** to a label (`C-enter`), a mark or a line leave a cursor
+  there; `C-S-enter` extends the selection to the label instead.
 - `C-x space` turns the same extending on (or off) whatever is selected.
 
 ## Keys
@@ -169,10 +169,36 @@ always around the cursor.
 | `C-t C-l` | `A-t A-l` | Line (inside: without its indent and line break) |
 | `C-t C-o` | `A-t A-o` | Syntax node (around: the node around it) |
 | `C-t C-x` | `A-t A-x` | HTML or XML tag |
+| `C-t W` | `A-t W` | WORD (punctuation and all, as `#include`) |
+| `C-t d` | `A-t d` | Number |
+| `C-t i` | `A-t i` | Indented block |
+| `C-t g` | `A-t g` | Argument (from the syntax tree) |
+| `C-t t` | `A-t t` | Type (from the syntax tree) |
+| `C-t /` | `A-t /` | Comment (from the syntax tree) |
 
-Surround: `C-S-t a` adds a pair around each selection (type the
-bracket), `C-S-t r` replaces one (type the old, then the new), `C-S-t d`
-deletes one. `C-c e a`, `C-c e r` and `C-c e d` do the same.
+### Surround
+
+`C-m` then a pair's key wraps; `A-m` then a key takes the pair away. The
+keys are the text objects' letters.
+
+| Wrap (`C-m` then) | Take away (`A-m` then) | Pair |
+|---|---|---|
+| `C-b` or `b` | `A-b` or `b` | `( )` |
+| `C-r` or `r` | `A-r` or `r` | `[ ]` |
+| `C-c` or `c` | `A-c` or `c` | `{ }` |
+| `C-a` or `a` | `A-a` or `a` | `< >` |
+| `C-q` or `q` (or `"`) | `A-q` or `q` | Double quotes (taking away: any quotes) |
+| `'`, `` ` `` | | Single quotes, backticks |
+| | `A-n` or `n` | The nearest pair of any kind |
+
+- `C-m` wraps each selection, or with nothing selected the word at the
+  cursor, and leaves it selected with its pair.
+- `A-m` takes away the pair around each cursor, or the nearest one when
+  the cursor's in none, as `C-t` finds objects.
+- `C-m C-s` swaps a pair: the old one's key, then the new one's
+  (`C-m C-s b r` turns `( )` into `[ ]`).
+- Each is one step to undo. `C-S-t a` / `r` / `d` and `C-c e a` / `r` /
+  `d` still work, typing the bracket itself.
 
 ### Editing
 
@@ -216,12 +242,12 @@ Cursors on lines next to each other move and duplicate as one block.
 | `C-p` | Next pane | `A-p` | Previous pane |
 | `C-n` | Next search match | `A-n` | Previous search match |
 | `C-/` | Search forward | `A-/` | Search backward |
-| `C-m` | Jump, as flash.nvim: type what you're after, then its label | `A-m` | Cancel the jump; afterwards, go back to where it started |
+| `C-enter` | Jump, as flash.nvim: type what you're after, then its label (also `C-g j`) | `A-enter` | Cancel the jump; afterwards, go back to where it started |
 | `C-'` `x` | Set mark `x` | `A-'` `x` | Go to mark `x` |
 | `C-=` | Bigger text (window only) | `A-=` | Smaller text |
 | `C--` | Fold the block | `A--` | Unfold it |
 
-The jump works as flash.nvim's does. Press `C-m` and type what you're
+The jump works as flash.nvim's does. Press `C-enter` and type what you're
 looking for, one character or several: every match on screen lights up,
 the rest of the screen dims, and each match gets a label just after it,
 nearest first. Type the label to jump to the start of that match, or keep
@@ -232,8 +258,8 @@ typing to narrow the matches down.
 - A match keeps its label as you type more.
 - Lower case finds any case; a capital makes the search exact (smart case).
 - `enter` jumps to the nearest match, `backspace` takes back a character
-  (on none, cancels), `esc` or `A-m` cancels.
-- `C-S-m` extends the selection to the match instead of moving there.
+  (on none, cancels), `esc` or `A-enter` cancels.
+- `C-S-enter` extends the selection to the match instead of moving there.
 - Labels come from `jump-label-alphabet`, one letter each; with more
   matches than letters, type more to bring the rest down to a few.
 
@@ -342,7 +368,8 @@ arrive as themselves. Use the fallbacks:
 | Key | What the terminal sends without the protocol | Fallback |
 |---|---|---|
 | `C-i` | `tab` | `tab` indents a multi-line selection; `C-c e =` reindents |
-| `C-m` | `enter` | `C-g w` jumps to a word by its label |
+| `C-enter`, `C-S-enter` | `enter` | `C-g j` jumps |
+| `C-m` | `enter` | Surround: `C-S-t a` / `r` / `d` or `C-c e a` / `r` / `d` |
 | `C-[` / `A-[` | `esc` / the start of an escape code | `C-t C-o` selects the node, `A-t A-o` the one around it, `C-t -` shrinks |
 | `C-]` / `A-]` | `C-]` works; `alt-]` may not | `C-t ]` / `C-t [` next / previous sibling |
 | `C-'` / `A-'` | Nothing usable | `C-g m x` / `C-g ' x` |
@@ -377,7 +404,7 @@ were three keys deep under `C-c e`, while case changes had `C-u` and
 - **Ctrl and alt stay opposites:** lines up and down (`C-u` / `A-u`),
   duplicate below and above, join next and previous, comment and
   uncomment, case forward and back, copy-and-let-go and copy-and-keep.
-- **The home row keeps the motions.** `C-h j k l w e a f ;` and `C-m`,
+- **The home row keeps the motions.** `C-h j k l w e a f ;` and `C-enter`,
   `C-t`, `C-s` are as they were.
 - **Copy lets go.** After copying you usually move on, so `A-c` collapses
   the selection; `A-S-c` keeps it for when you don't.
@@ -423,7 +450,7 @@ unchanged. The tests check both sides.
 | `A-p` | The pane mode | Previous pane. Pane mode: `C-x p` |
 | `A-t` | The tab mode | Around text objects. Tab mode: `C-x t` |
 | `alt-space` | The next pane layout | The leader. Layouts: `C-x l` |
-| `A-m` | Swap the pane with the main one | Cancel or go back from a jump. Swap: `C-x m` |
+| `A-m` | Swap the pane with the main one | Take away a surrounding pair. Swap: `C-x m` |
 | `A-f` | Hide or show the floating views | Find backward. Floats: `C-x f` |
 | `A-F` | This file in a floating view | Select back through a character. `C-x F` |
 | `A-w` / `A-W` | The next float layout / pick a float | Previous word / select to it. `C-x w` / `C-x W` |
@@ -467,14 +494,14 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 139 tests over: every motion selecting and selecting
+`greed test` runs 150 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with
 `flash-type-at-cursor`), shrinking and crossing the
 anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
-object (inside one, and the nearest one when the cursor's in none), syntax node selection, surround, the completion menu (tab through it, other keys closing it and doing their own thing), the flash.nvim-style jump (searching as you type, labels that never clash with the search and stay put, smart case, enter, backspace and cancelling),
+object (inside one, and the nearest one when the cursor's in none), syntax node selection, the new objects (WORD, number, indented block, argument, type, comment), surround on `C-m` and `A-m` (every pair, the word at the cursor, several cursors, the nearest pair, swapping, one undo step), the completion menu (tab through it, other keys closing it and doing their own thing), the flash.nvim-style jump (searching as you type, labels that never clash with the search and stay put, smart case, enter, backspace and cancelling),
 marks, case changes, copying (letting go and keeping the selection, the line with nothing selected, one piece per cursor), cut, paste and taking it back, moving, duplicating and joining lines (multiline and with several cursors, each one undo step), commenting and uncommenting, search and replace, line
 prompts, multiple cursors, macros, registers, counts, folds, repeating a
 change, splits and panes, buffers, saving, the key conflicts above, typing

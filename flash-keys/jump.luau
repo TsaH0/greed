@@ -1,4 +1,4 @@
--- Jumping as flash.nvim does it: ctrl-m, then type what you're looking for,
+-- Jumping as flash.nvim does it: ctrl-enter, then type what you're looking for,
 -- a character or as many as it takes. Every match on screen lights up, the
 -- rest dims, and each match gets a label just after it, nearest first. Type
 -- the label to jump there; keep typing to narrow the matches.
@@ -10,10 +10,10 @@
 --
 --   enter       jump to the nearest match
 --   backspace   take back the last character typed (on none, cancel)
---   esc, alt-m  cancel
+--   esc, alt-enter  cancel
 --
--- Afterwards alt-m goes back to where the jump started. ctrl-M jumps
--- extending the selection, as ctrl-space before it does.
+-- It's on ctrl-enter (and C-g j). Afterwards alt-enter goes back to where
+-- the jump started; ctrl-shift-enter jumps extending the selection.
 
 local greed = require("@greed")
 local find = require("./find")
@@ -148,7 +148,7 @@ local function choose(view: greed.View): number?
 	while true do
 		show(view, targets, true)
 		local key = greed.next_key()
-		if key == "esc" or key == "alt-m" then
+		if key == "esc" or key == "alt-enter" or key == "alt-m" then
 			return nil
 		elseif key == "enter" then
 			return if targets[1] then targets[1].from else nil

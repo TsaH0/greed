@@ -44,7 +44,10 @@ test("in flash, its own keys win over the keys bound for every mode", function(t
 		["alt-n"] = "flash-search-prev",
 		["alt-p"] = "flash-pane-prev",
 		["alt-w"] = "flash-word-prev",
-		["alt-m"] = "flash-jump-back",
+		["alt-enter"] = "flash-jump-back",
+		["ctrl-enter"] = "flash-jump",
+		["ctrl-m ctrl-b"] = "flash-surround-b",
+		["alt-m alt-b"] = "flash-unsurround-b",
 		["alt-t alt-r"] = "flash-around-r",
 	}
 	for keys, command in mine do

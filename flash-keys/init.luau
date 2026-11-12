@@ -17,6 +17,7 @@ require("@self/objects")
 local jump = require("@self/jump")
 local edit = require("@self/edit")
 require("@self/lines")
+require("@self/surround")
 local keymap = require("@self/keymap")
 
 greed.keymap.bind("flash", keymap.keys)
