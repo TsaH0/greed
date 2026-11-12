@@ -20,7 +20,7 @@ local MOTIONS: { { string } } = {
 
 M.keys = {
 	-- Selection
-	["ctrl-space"] = "flash-stop-selection",
+	["ctrl-space"] = "flash-space",
 	["ctrl-S"] = "flash-collapse-anchor",
 	["alt-S"] = "flash-collapse-head",
 	esc = "flash-escape",

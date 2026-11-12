@@ -33,7 +33,7 @@ test("in flash, its own keys win over the keys bound for every mode", function(t
 	-- alt-h j k l move between panes everywhere else, alt-space arranges the
 	-- tab, alt-= and alt-- resize panes, alt-f toggles floats.
 	local mine = {
-		["ctrl-space"] = "flash-stop-selection",
+		["ctrl-space"] = "flash-space",
 		["alt-h"] = "flash-char-right",
 		["alt-j"] = "flash-line-up",
 		["alt-k"] = "flash-line-down",

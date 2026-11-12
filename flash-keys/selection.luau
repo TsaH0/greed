@@ -7,7 +7,9 @@
 --   * With shift, a motion keeps the anchor and moves the head, carrying
 --     the selection on. Going back past the anchor shrinks it and then
 --     grows it the other way.
---   * ctrl-space and esc stop selecting: each range collapses to its head.
+--   * ctrl-space from a bare cursor starts selecting: motions extend from
+--     there until it's pressed again. With a selection, ctrl-space (and
+--     esc) stop selecting: each range collapses to its head.
 --
 -- Typing replaces whatever is selected, what a plain motion selected
 -- included, and backspace and delete delete it. With the option
@@ -30,8 +32,8 @@ greed.option.define({
 })
 
 -- Extend mode, by view and the buffer it shows: with it on, plain motions
--- extend as shifted ones do (C-x space, for terminals that can't send
--- ctrl with shift).
+-- extend as shifted ones do. ctrl-space from a bare cursor turns it on,
+-- and again (or with any selection) turns it off.
 local sticky: { [string]: boolean } = {}
 -- The selection a plain motion left, by view and buffer.
 local soft: { [string]: greed.Selection } = {}
@@ -226,6 +228,27 @@ greed.command({
 	doc = "Collapse each selection to its moving end, and turn persistent selection off",
 	run = function(ctx)
 		M.collapse(ctx.view, false)
+	end,
+})
+
+greed.command({
+	name = "flash-space",
+	doc = "Start selecting from the cursor, so motions extend until pressed again; "
+		.. "with a selection, stop selecting and collapse to the cursor",
+	run = function(ctx)
+		local view = ctx.view
+		local selecting = M.sticky(view)
+		for _, range in view:selection().ranges do
+			if range.anchor ~= range.head then
+				selecting = true
+			end
+		end
+		if selecting then
+			M.collapse(view, false)
+		else
+			M.set_sticky(view, true)
+			greed.echo("Selecting")
+		end
 	end,
 })
 

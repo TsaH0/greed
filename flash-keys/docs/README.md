@@ -44,17 +44,20 @@ range has an anchor and a head, and the cursor sits between characters.
 | `C-e` | Selects the next word on its own | The next one |
 | `A-a` | Selects to the end of the line | Selects the next line, up to its line break |
 | `C-a` | Selects back to the first non-blank, then the line start | The line before |
-| `C-l` / `C-h` | Selects the next / previous character | The one after / before |
-| `C-j` / `C-k` | Selects down / up a line, keeping the column | The next line down / up |
 | `C-f x` | Selects through the next `x` | Through the one after |
 
 - **Every plain motion selects what it moved over**, and pressed again it
   selects the next piece on its own rather than growing the last one.
+  `C-h` `C-j` `C-k` `C-l` (and their alt opposites) are the exception:
+  they only move the cursor, dropping any selection.
 - **Shift carries the selection on:** `C-w C-S-w C-S-w` selects three
   words; `A-a A-S-a A-S-a` three lines. The anchor stays where it was, and
   going back past it shrinks the selection, then grows it the other way.
-- **`C-space` stops selecting:** each selection collapses to its cursor.
-  `esc` does too, `C-S-s` collapses to the anchor and `A-S-s` to the head.
+- **`C-space` starts and stops selecting.** From a bare cursor it starts:
+  every motion, `C-h j k l` included, then extends from there
+  (`C-space C-j C-j` selects two lines down) until you press it again.
+  With a selection showing, it stops it, collapsing to the cursor. `esc`
+  stops too, `C-S-s` collapses to the anchor and `A-S-s` to the head.
 - **Act on what's selected:** `C-d` deletes it (`C-w C-d` deletes a word,
   `A-a C-d` to the line's end), `A-c` copies it, `` C-` `` changes its case,
   `C-\` comments its lines, `C-S-t a (` puts brackets round it.
@@ -76,9 +79,7 @@ range has an anchor and a head, and the cursor sits between characters.
   extend the selection to it.
 - **Jumps** to a label (`C-m`), a mark or a line leave a cursor there;
   `C-S-m` extends the selection to the label instead.
-- **Extend mode** (`C-x space`, off with `C-space`) makes plain motions
-  carry the selection on as shift does, for terminals that can't send
-  ctrl with shift.
+- `C-x space` turns the same extending on (or off) whatever is selected.
 
 ## Keys
 
@@ -92,10 +93,10 @@ it carries the selection on instead.
 
 | Ctrl | | Alt | |
 |---|---|---|---|
-| `C-h` | Left a character | `A-h` | Right a character |
-| `C-l` | Right a character | `A-l` | Left a character |
-| `C-j` | Down a line | `A-j` | Up a line |
-| `C-k` | Up a line | `A-k` | Down a line |
+| `C-h` | Left a character (moves only) | `A-h` | Right a character |
+| `C-l` | Right a character (moves only) | `A-l` | Left a character |
+| `C-j` | Down a line (moves only) | `A-j` | Up a line |
+| `C-k` | Up a line (moves only) | `A-k` | Down a line |
 | `C-w` | Next word start | `A-w` | Previous word start |
 | `C-e` | Next word end | `A-e` | Previous word end |
 | `C-a` | First non-blank, then line start, then the line before | `A-a` | Line end, then the next line |
@@ -127,8 +128,8 @@ moves on to the next match.
 
 | Keys | |
 |---|---|
-| `C-space` | Stop selecting: collapse to the cursor |
-| `C-x space` | Extend mode: plain motions extend, until `C-space` |
+| `C-space` | From a cursor: start selecting, motions extend until pressed again. With a selection: stop selecting |
+| `C-x space` | Turn extending on or off, whatever is selected |
 | `C-S-s` | Collapse to the anchor |
 | `A-S-s` | Collapse to the head |
 | `esc` | Drop the selection |
@@ -303,7 +304,7 @@ arrive as themselves. Use the fallbacks:
 | `C-]` / `A-]` | `C-]` works; `alt-]` may not | `C-t ]` / `C-t [` next / previous sibling |
 | `C-'` / `A-'` | Nothing usable | `C-g m x` / `C-g ' x` |
 | `C-;`, `C-.`, `C-=`, `C--`, `C-/`, `C-\` | Often nothing, or another key | Finds: `C-f` / `A-f` (no fallback for till and repeat); folds: `C-c z c` / `C-c z o`; case: `C-c c`; search: `C-c s b` |
-| `C-S-letter` motions | The same as `C-letter` | `C-x space` (extend mode), then the plain motions, `C-space` to stop; or the `A-S-` twin (`A-S-k` for `C-S-j`) |
+| `C-S-letter` motions | The same as `C-letter` | `C-space`, then the plain motions, `C-space` to stop; or the `A-S-` twin (`A-S-k` for `C-S-j`) |
 | `C-S-x` | `C-x`, the prefix | `C-c e x` |
 | `C-S-d` | `C-d`, which deletes | `C-c e u` (and `C-c e U` for `A-S-d`) |
 | `C-S-o` | `C-o`, which opens a line | `C-c e j` (`A-S-o` works: `C-c e O` too) |
@@ -374,7 +375,7 @@ unchanged. The tests check both sides.
 
 | Key | Greed's default (every mode) | In Flash |
 |---|---|---|
-| `C-space` | The leader in the VS Code style; the leader from a terminal | Stop selecting. The leader is `alt-space` |
+| `C-space` | The leader in the VS Code style; the leader from a terminal | Start and stop selecting. The leader is `alt-space` |
 | `A-h` `A-j` `A-k` `A-l` | Move to the pane on that side | Character and line motions. Panes: `alt` and the arrows (still Greed's), `C-p` / `A-p`, `C-x o` |
 | `A-p` | The pane mode | Previous pane. Pane mode: `C-x p` |
 | `A-t` | The tab mode | Around text objects. Tab mode: `C-x t` |
@@ -423,7 +424,7 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 116 tests over: every motion selecting and selecting
+`greed test` runs 118 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with

@@ -117,6 +117,15 @@ local DOCS: { [string]: string } = {
 	["doc-end"] = "to the end of the buffer",
 }
 
+-- The motions that only move the cursor; the others select what they go
+-- over.
+local MOVES = {
+	["char-left"] = true,
+	["char-right"] = true,
+	["line-down"] = true,
+	["line-up"] = true,
+}
+
 -- Defines `flash-NAME` and `flash-select-NAME` running `run(ctx, shift)`.
 local function pair(name: string, run: (ctx: greed.Context, shift: boolean) -> ())
 	for _, shift in { false, true } do
@@ -124,6 +133,7 @@ local function pair(name: string, run: (ctx: greed.Context, shift: boolean) -> (
 			name = if shift then `flash-select-{name}` else `flash-{name}`,
 			doc = if shift
 				then `Extend the selection {DOCS[name]}`
+				elseif MOVES[name] then `Move {DOCS[name]}`
 				else `Select {DOCS[name]}`,
 			run = function(ctx)
 				run(ctx, shift)
@@ -132,13 +142,20 @@ local function pair(name: string, run: (ctx: greed.Context, shift: boolean) -> (
 	end
 end
 
+-- h and l only move the cursor (collapsing any selection), as j and k
+-- do; with shift they extend.
 for name, target in M.targets do
 	pair(name, function(ctx, shift)
-		selection.move(ctx, target, shift)
+		if MOVES[name] then
+			selection.teleport(ctx, target, shift)
+		else
+			selection.move(ctx, target, shift)
+		end
 	end)
 end
 
--- Up and down keep the column they started from while nothing else
+-- Up and down only move the cursor, as h and l do; with shift they
+-- extend. They keep the column they started from while nothing else
 -- touches the selection, so going through a short line doesn't lose it.
 -- Folded lines are stepped over.
 local goals: { [number]: { selection: greed.Selection, columns: { number } } } = {}
@@ -149,7 +166,16 @@ local function vertical(ctx: greed.Context, delta: number, shift: boolean)
 	local sel = view:selection()
 	local goal = goals[view:id()]
 	local columns: { number } = {}
-	if goal and selection.same(sel, goal.selection) then
+	-- Only the cursors count, so stopping a selection keeps the column.
+	local same_heads = goal ~= nil and #goal.selection.ranges == #sel.ranges
+	if goal and same_heads then
+		for i, range in sel.ranges do
+			if goal.selection.ranges[i].head ~= range.head then
+				same_heads = false
+			end
+		end
+	end
+	if goal and same_heads then
 		columns = goal.columns
 	else
 		for i, range in sel.ranges do
@@ -183,14 +209,10 @@ local function vertical(ctx: greed.Context, delta: number, shift: boolean)
 			else text.at_drawn_column(buffer, line, columns[i], view)
 		sel.ranges[i] = if extend
 			then { anchor = range.anchor, head = head }
-			else { anchor = range.head, head = head }
+			else { anchor = head, head = head }
 	end
 	view:set_selection(sel)
-	if extend then
-		selection.remember(view)
-	else
-		selection.soften(view)
-	end
+	selection.remember(view)
 	goals[view:id()] = { selection = view:selection(), columns = columns }
 end
 
