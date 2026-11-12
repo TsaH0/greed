@@ -144,6 +144,14 @@ then a key selects around it. The second key works with or without its
 modifier (`C-t C-b` or `C-t b`). Shifted motions carry an object's
 selection on, and typing replaces it.
 
+The cursor needn't be inside the object. As Vim does with quotes (and
+targets.vim and mini.ai with everything), when it's in none Flash takes
+the next one that starts on the cursor's line, or else the nearest one
+before or after: on `|foo(a, b)`, `C-t C-r` selects `a, b`, and at the end
+of `foo(a, b) x|` it reaches back for the same. This works for brackets,
+quotes, tags and functions; words, lines, paragraphs and sentences are
+always around the cursor.
+
 | Inside | Around | Object |
 |---|---|---|
 | `C-t C-b` | `A-t A-b` | Square brackets `[]` |
@@ -424,14 +432,14 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 118 tests over: every motion selecting and selecting
+`greed test` runs 123 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with
 `flash-type-at-cursor`), shrinking and crossing the
 anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
-object, syntax node selection, surround, the jump and its cancelling,
+object (inside one, and the nearest one when the cursor's in none), syntax node selection, surround, the jump and its cancelling,
 marks, case changes, copying (letting go and keeping the selection, the line with nothing selected, one piece per cursor), cut, paste and taking it back, moving, duplicating and joining lines (multiline and with several cursors, each one undo step), commenting and uncommenting, search and replace, line
 prompts, multiple cursors, macros, registers, counts, folds, repeating a
 change, splits and panes, buffers, saving, the key conflicts above, typing

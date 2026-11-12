@@ -66,23 +66,99 @@ export type Object = {
 	key: string?,
 	--- Or a function of its own.
 	find: ((Buffer, number, boolean) -> (number?, number?))?,
+	--- How to find one when the cursor isn't in one: the brackets or
+	--- quotes whose next and last pairs to look at, "tag", or a syntax
+	--- tree object ("function").
+	seek: ({ string } | string)?,
 }
+
+-- A place inside the object that starts or ends nearest `pos` on each
+-- side, for each way `seek` says to look: { pos inside, the key to find
+-- it with }.
+type Probe = { at: number, key: string }
+
+local function probes(buffer: Buffer, pos: number, object: Object): { Probe }
+	local out: { Probe } = {}
+	local seek = object.seek
+	if type(seek) == "table" then
+		for _, char in seek do
+			for _, back in { false, true } do
+				local open = core.textobjects.next_pair(buffer, pos, char, back)
+				if open then
+					table.insert(out, { at = buffer:next_char(open), key = char })
+				end
+			end
+		end
+	elseif seek == "tag" then
+		local after = buffer:find_all("<[A-Za-z]", pos) or {}
+		if after[1] then
+			table.insert(out, { at = after[1].to, key = "x" })
+		end
+		local before = buffer:find_all("<[A-Za-z]", 0, pos) or {}
+		if #before > 0 then
+			table.insert(out, { at = before[#before].to, key = "x" })
+		end
+	elseif type(seek) == "string" then
+		local next: number?, last: number? = nil, nil
+		for _, found in core.syntax.objects(buffer, seek) do
+			local from, to = found.around.from, found.around.to
+			if from > pos and (next == nil or from < next) then
+				next = from
+			elseif to <= pos and (last == nil or from > last) then
+				last = from
+			end
+		end
+		-- One character in: core's finder doesn't count the first.
+		for _, at in { next, last } do
+			if at then
+				table.insert(out, { at = buffer:next_char(at), key = object.key :: string })
+			end
+		end
+	end
+	return out
+end
+
+--- With the cursor at `pos` in no `object`, the one to take, as Vim and
+--- targets.vim do: the next one starting on the cursor's line, or else
+--- the nearest, before or after. Nil when there's none.
+function M.nearest(
+	buffer: Buffer,
+	pos: number,
+	object: Object,
+	around: boolean
+): (number?, number?)
+	local line = buffer:line_of(pos)
+	local best_from: number?, best_to: number? = nil, nil
+	local best_rank, best_distance = math.huge, math.huge
+	for _, probe in probes(buffer, pos, object) do
+		local from, to = core.textobjects.find(buffer, probe.at, probe.key, around)
+		if from and to then
+			local after = from >= pos
+			local rank = if after and buffer:line_of(from) == line then 0 else 1
+			local distance = if after then from - pos else pos - to
+			if rank < best_rank or (rank == best_rank and distance < best_distance) then
+				best_from, best_to, best_rank, best_distance = from, to, rank, distance
+			end
+		end
+	end
+	return best_from, best_to
+end
 
 --- The objects, by the key after ctrl-t or alt-t: a name for the docs and
 --- the key core.textobjects.find takes, or a function of its own.
 M.objects = {
-	b = { name = "square brackets", key = "[" },
-	a = { name = "angle brackets", key = "<" },
-	r = { name = "parentheses", key = "(" },
-	c = { name = "curly braces", key = "{" },
-	n = { name = "nearest bracket pair", key = "m" },
-	q = { name = "quotes (any kind, innermost)", find = quotes },
+	b = { name = "square brackets", key = "[", seek = { "[" } },
+	a = { name = "angle brackets", key = "<", seek = { "<" } },
+	r = { name = "parentheses", key = "(", seek = { "(" } },
+	c = { name = "curly braces", key = "{", seek = { "{" } },
+	n = { name = "nearest bracket pair", key = "m", seek = { "(", "[", "{", "<" } },
+	q = { name = "quotes (any kind, innermost)", find = quotes, seek = { '"', "'", "`" } },
 	w = { name = "word", key = "w" },
 	p = { name = "paragraph", key = "p" },
 	s = { name = "sentence", key = "s" },
-	f = { name = "function", key = "f" },
+	f = { name = "function", key = "f", seek = "function" },
 	l = { name = "line", find = line },
-	x = { name = "HTML or XML tag", key = "x" },
+	x = { name = "HTML or XML tag", key = "x", seek = "tag" },
 } :: { [string]: Object }
 
 for letter, object in M.objects do
@@ -90,14 +166,19 @@ for letter, object in M.objects do
 		local side = if around then "around" else "inside"
 		greed.command({
 			name = `flash-{side}-{letter}`,
-			doc = `Select {side} the {object.name} around each cursor`,
+			doc = `Select {side} the {object.name} around each cursor, `
+				.. "or the nearest one when it's in none",
 			run = function(ctx)
 				select_each(ctx, function(buffer, pos)
+					local from: number?, to: number?
 					if object.find then
-						return object.find(buffer, pos, around)
+						from, to = object.find(buffer, pos, around)
+					else
+						from, to = core.textobjects.find(buffer, pos, object.key :: string, around)
 					end
-					local key = object.key :: string
-					local from, to = core.textobjects.find(buffer, pos, key, around)
+					if (from == nil or to == nil) and object.seek then
+						from, to = M.nearest(buffer, pos, object, around)
+					end
 					return from, to
 				end)
 			end,
