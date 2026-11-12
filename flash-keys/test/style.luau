@@ -131,6 +131,17 @@ test("a terminal sends flash's keys to its program", function(t)
 	end
 end)
 
+test("ctrl-c n with ctrl-j and ctrl-k moves that many lines, as Vim's 5j", function(t)
+	t:buffer("|a\nb\nc\nd\ne\nf")
+	greed.mode.set("flash")
+	t:keys("ctrl-c n 4 ctrl-j")
+	t:expect("a\nb\nc\nd\n|e\nf")
+	t:keys("ctrl-c n 3 ctrl-k")
+	t:expect("a\n|b\nc\nd\ne\nf")
+	t:keys("ctrl-c n 2 ctrl-J")
+	t:expect("a\n^b\nc\n|d\ne\nf")
+end)
+
 test("ctrl-c n gives the next command a count", function(t)
 	t:buffer("|a b c d e")
 	greed.mode.set("flash")

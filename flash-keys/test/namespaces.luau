@@ -69,7 +69,7 @@ test("C-c e + and - change the number at the cursor", function(t)
 end)
 
 test('C-c e " picks a register for the next copy, and C-c e i inserts it', function(t)
-	check(t, "^ab| cd", 'ctrl-c e " q ctrl-c e y alt-S alt-a ctrl-space ctrl-c e i q', "ab cdab|")
+	check(t, "^ab| cd", 'ctrl-c e " q ctrl-c e y alt-S alt-a ctrl-space ctrl-l ctrl-c e i q', "ab cdab|")
 end)
 
 test("C-c e ; comments the line, again uncomments it", function(t)

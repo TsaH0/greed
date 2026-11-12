@@ -45,10 +45,10 @@ test("ctrl-z undoes, alt-z redoes", function(t)
 end)
 
 test("ctrl-y pastes and alt-y takes the paste back, only while it's the last change", function(t)
-	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-space ctrl-y", "ab cab|")
+	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-space ctrl-l ctrl-y", "ab cab|")
 	t:keys("alt-y")
 	t:expect("ab c|")
-	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-space ctrl-y x alt-y", "ab cabx|")
+	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-space ctrl-l ctrl-y x alt-y", "ab cabx|")
 end)
 
 test("marks are set with ctrl-' and gone back to with alt-'", function(t)

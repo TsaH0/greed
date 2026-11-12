@@ -39,6 +39,10 @@ Selection first, as in Helix and Kakoune: you select, then act. Every
 range has an anchor and a head, and positions sit between characters.
 The cursor is drawn as a block on the character after its position
 (`flash-cursor` set to `"bar"` draws a bar there instead).
+Stopping a selection (`C-space`, `esc`, `A-c`) leaves the block where it
+was drawn, on the last character selected; typing then goes in before
+that character, so to add after the end of a line, press `C-l` once more
+first (`A-a C-space C-l`).
 
 | Press | Does | Again |
 |---|---|---|
@@ -497,7 +501,7 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 153 tests over: every motion selecting and selecting
+`greed test` runs 154 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with

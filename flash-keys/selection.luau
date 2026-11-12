@@ -211,8 +211,16 @@ end
 --- turns persistent selection off.
 function M.collapse(view: greed.View, to_anchor: boolean)
 	local selection = view:selection()
+	-- A block cursor on a selection going forward is drawn on its last
+	-- character, one before its head: collapsing keeps it there, so the
+	-- cursor doesn't jump a character on.
+	local block = greed.mode.cursor_of() == "block"
+	local buffer = view:buffer()
 	for i, range in selection.ranges do
 		local at = if to_anchor then range.anchor else range.head
+		if block and not to_anchor and range.head > range.anchor then
+			at = buffer:prev_char(range.head)
+		end
 		selection.ranges[i] = { anchor = at, head = at }
 	end
 	view:set_selection(selection)

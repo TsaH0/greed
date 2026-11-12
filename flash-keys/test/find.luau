@@ -56,7 +56,7 @@ end)
 
 test("typing after a find replaces what it went through", function(t)
 	check(t, "|a,b", "ctrl-f , x", "x|b")
-	check(t, "|a,b", "ctrl-f , ctrl-space x", "a,x|b")
+	check(t, "|a,b", "ctrl-f , ctrl-space x", "ax|,b")
 end)
 
 test("every cursor finds on its own line", function(t)

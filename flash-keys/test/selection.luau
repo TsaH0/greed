@@ -88,9 +88,13 @@ test("going back with shift shrinks the selection, then crosses the anchor", fun
 end)
 
 test("ctrl-space stops selecting, collapsing to the cursor", function(t)
-	check(t, "|one two", "ctrl-w ctrl-space", "one |two")
-	check(t, "|one two", "ctrl-W ctrl-W ctrl-space", "one two|")
-	check(t, "|one two", "ctrl-w esc", "one |two")
+	-- The block cursor stays on the last character selected.
+	check(t, "|one two", "ctrl-w ctrl-space", "one| two")
+	check(t, "|one two", "ctrl-W ctrl-W ctrl-space", "one tw|o")
+	check(t, "|one two", "ctrl-w esc", "one| two")
+	check(t, "on|e two", "ctrl-space", "on|e two")
+	-- Going back, it's on the first, where the head is.
+	check(t, "one t|wo", "alt-w ctrl-space", "one |two")
 end)
 
 test("C-x space makes plain motions extend until ctrl-space", function(t)
@@ -103,15 +107,15 @@ test("ctrl-space from a cursor starts selecting, and motions carry it on until p
 	check(t, "abc\nxy|z", "ctrl-space ctrl-k", "ab|c\nxy^z")
 	check(t, "a|bcd", "ctrl-space ctrl-l ctrl-l alt-l", "a^b|cd")
 	check(t, "|one two three", "ctrl-space ctrl-w ctrl-w", "^one two |three")
-	check(t, "ab|c\nd\nxyz", "ctrl-space ctrl-j ctrl-j ctrl-space", "abc\nd\nxy|z")
-	check(t, "ab|c\nd\nxyz", "ctrl-space ctrl-j ctrl-space ctrl-j", "abc\nd\nxy|z")
+	check(t, "ab|c\nd\nxyz", "ctrl-space ctrl-j ctrl-j ctrl-space", "abc\nd\nx|yz")
+	check(t, "ab|c\nd\nxyz", "ctrl-space ctrl-j ctrl-space ctrl-j", "abc\nd\n|xyz")
 	-- With a selection showing, it stops it instead.
-	check(t, "|one two", "ctrl-w ctrl-space ctrl-l", "one t|wo")
+	check(t, "|one two", "ctrl-w ctrl-space ctrl-l", "one |two")
 end)
 
 test("shift-s collapses to the anchor, alt-shift-s to the head", function(t)
 	check(t, "|one two three", "ctrl-W ctrl-W ctrl-S", "|one two three")
-	check(t, "|one two three", "ctrl-W ctrl-W alt-S", "one two |three")
+	check(t, "|one two three", "ctrl-W ctrl-W alt-S", "one two| three")
 end)
 
 test("typing replaces what a motion selected", function(t)
@@ -131,7 +135,7 @@ end)
 
 test("enter and paste replace what's selected", function(t)
 	check(t, "|ab cd", "ctrl-w enter", "\n|cd")
-	check(t, "|ab cd", "ctrl-e alt-c ctrl-w ctrl-y", "ab ab|")
+	check(t, "|ab cd", "ctrl-e alt-c ctrl-l ctrl-w ctrl-y", "ab ab|")
 end)
 
 test("with flash-type-at-cursor on, typing after a motion goes in at the cursor", function(t)

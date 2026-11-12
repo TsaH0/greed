@@ -62,7 +62,7 @@ end)
 -- Copy, cut, paste
 
 test("alt-c copies the selection and stops selecting", function(t)
-	check(t, "|one two", "ctrl-W alt-c", "one |two")
+	check(t, "|one two", "ctrl-W alt-c", "one| two")
 	-- The next motion selects afresh rather than growing what was copied.
 	t:keys("ctrl-w")
 	t:expect("one ^two|")
@@ -72,7 +72,7 @@ test("alt-c copies the selection and stops selecting", function(t)
 end)
 
 test("alt-c copies what a plain motion selected", function(t)
-	check(t, "|one two", "ctrl-w alt-c alt-a ctrl-space ctrl-y", "one twoone |")
+	check(t, "|one two", "ctrl-w alt-c alt-a ctrl-space ctrl-l ctrl-y", "one twoone |")
 end)
 
 test("alt-c with nothing selected copies the line, whole lines pasting above", function(t)
@@ -80,8 +80,8 @@ test("alt-c with nothing selected copies the line, whole lines pasting above", f
 end)
 
 test("alt-c copies every cursor's selection, one piece each", function(t)
-	check(t, "^a| 1\n^b| 2", "alt-c", "a| 1\nb| 2")
-	t:keys("alt-a ctrl-space ctrl-y")
+	check(t, "^a| 1\n^b| 2", "alt-c", "|a 1\n|b 2")
+	t:keys("alt-a ctrl-space ctrl-l ctrl-y")
 	t:expect("a 1a|\nb 2b|")
 end)
 
@@ -89,7 +89,7 @@ test("alt-C copies and keeps the selection, so shift carries it on", function(t)
 	check(t, "|one two", "ctrl-W alt-C", "^one |two")
 	t:keys("ctrl-W")
 	t:expect("^one two|")
-	t:keys("ctrl-space ctrl-y")
+	t:keys("ctrl-space ctrl-l ctrl-y")
 	t:expect("one twoone |")
 end)
 
@@ -101,14 +101,14 @@ test("C-x y copies the whole file, leaving the cursor where it was", function(t)
 end)
 
 test("ctrl-X cuts the selection, or the line with nothing selected", function(t)
-	check(t, "^ab| cd", "ctrl-X alt-a ctrl-space ctrl-y", " cdab|")
+	check(t, "^ab| cd", "ctrl-X alt-a ctrl-space ctrl-l ctrl-y", " cdab|")
 	check(t, "ab\nc|d\nef", "ctrl-X", "ab\n|ef")
 	check(t, "ab\nc|d\nef", "ctrl-X ctrl-y", "ab\ncd\n|ef")
 end)
 
 test("C-c e y copies keeping the selection, C-c e c as alt-c does", function(t)
 	check(t, "|ab", "ctrl-W ctrl-c e y", "^ab|")
-	check(t, "|ab", "ctrl-W ctrl-c e c", "ab|")
+	check(t, "|ab", "ctrl-W ctrl-c e c", "a|b")
 end)
 
 -- Comments
