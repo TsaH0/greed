@@ -16,6 +16,7 @@ local find = require("@self/find")
 require("@self/objects")
 local jump = require("@self/jump")
 local edit = require("@self/edit")
+require("@self/lines")
 local keymap = require("@self/keymap")
 
 greed.keymap.bind("flash", keymap.keys)

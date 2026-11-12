@@ -51,7 +51,10 @@ The cursor sits between characters.
 - `ctrl-S` collapses to the anchor and `alt-S` to the head, both turning
   persistent selection off. `esc` drops the selection too.
 - Typing replaces the selection and turns persistent selection off, as
-  typing does Emacs's mark. Copying keeps the selection, as in Helix.
+  typing does Emacs's mark.
+- Copying with `A-c` lets go of the selection too: it collapses to each
+  head and turns persistent selection off, so the next motion moves rather
+  than growing what you copied. `A-S-c` copies and keeps the selection.
 - Each cursor moves and selects on its own, so all of this works with
   several cursors.
 - Searches (`ctrl-n`, `alt-n`) select their match. They extend only when
@@ -136,9 +139,9 @@ on, but motions extend what they select.
 | `C-t C-o` | `A-t A-o` | Syntax node (around: the node around it) |
 | `C-t C-x` | `A-t A-x` | HTML or XML tag |
 
-Surround: `C-c e a` adds a pair around each selection (type the
-bracket), `C-c e r` replaces one (type the old, then the new), `C-c e d`
-deletes one.
+Surround: `C-S-t a` adds a pair around each selection (type the
+bracket), `C-S-t r` replaces one (type the old, then the new), `C-S-t d`
+deletes one. `C-c e a`, `C-c e r` and `C-c e d` do the same.
 
 ### Editing
 
@@ -147,14 +150,31 @@ deletes one.
 | `C-d` | Delete forward (or the selection) | `A-d` | Delete backward (or the selection) |
 | `C-i` | Indent | `A-i` | Unindent |
 | `C-o` | Open a line below | `A-o` | Open a line above |
-| `C-u` | Upper-case the selection, or the word | `A-u` | Lower-case it |
-| `C-\` | Case: lower, UPPER, Title | `A-\` | Case the other way round |
+| `C-u` | Move the lines up, selections and all | `A-u` | Move them down |
+| `C-S-d` | Duplicate the lines below, the selection going with the copy | `A-S-d` | Duplicate them above |
+| `C-S-o` | Join the next line on | `A-S-o` | Join this line onto the one before |
+| `C-\` | Comment the lines, or uncomment them if they all are | `A-\` | Uncomment the lines that have a comment; never adds one |
+| `` C-` `` | Case: lower, UPPER, Title | `` A-` `` | Case the other way round |
 | `C-z` | Undo | `A-z` | Redo |
-| `C-y` | Paste, replacing the selection | `A-y` | Take the paste back, if it's still the last thing done |
+| `A-c` | Copy the selection, or the line with nothing selected, and let go of the selection | `A-S-c` | Copy, keeping the selection |
+| `C-S-x` | Cut the selection, or the line with nothing selected | | |
+| `C-y` | Paste, replacing the selection (whole lines go above) | `A-y` | Take the paste back, if it's still the last thing done |
 | `C-r` | Replace the next match of the search | `A-r` | Replace the previous match |
 
 `C-r` asks what to replace with the first time, and uses that after;
 `C-c s e` changes it.
+
+| Keys | |
+|---|---|
+| `C-,` | Do the last edit again (Vim's `.`) |
+| `A-x` | Run any command by name |
+| `C-S-p` | Open a file in the project |
+| `C-S-b` | Switch buffer |
+| `C-S-r` | Rename the symbol at the cursor (language server) |
+
+Moving and duplicating lines take every cursor's lines and keep each
+selection where it was on its text, and each is one step to undo.
+Cursors on lines next to each other move and duplicate as one block.
 
 ### Moving around
 
@@ -223,8 +243,8 @@ as Emacs's `C-u`: `C-c n 3 C-w` moves three words.
 |---|---|---|
 | `C-c m` | Multiple cursors | `n` next match, `p` previous match, `a` every match, `j` / `k` a cursor below / above, `s` split into lines, `r` select a regex's matches, `x` remove the primary cursor, `c` keep only the primary, `o` / `O` rotate the primary, `l` line them up |
 | `C-c s` | Search | `w` the word at the cursor, `a` select every match, `r` replace in the file, `e` what `C-r` replaces with, `f` the project, `b` this buffer as a list, `c` clear the highlights, `g` grep into a panel |
-| `C-c c` | Text case and shape | `u` upper, `l` lower, `~` switch, `t` Title, `s` snake, `c` camel, `k` kebab, `p` Pascal, `o` sort lines, `r` reflow |
-| `C-c e` | Editing | `y` copy (the line, with nothing selected), `x` cut, `P` paste before, `j` join lines, `;` comment, `k` delete the lines, `u` duplicate them, `J` / `K` move them down / up, `a` / `r` / `d` surround add / replace / delete, `.` repeat the last change, `+` / `-` the number at the cursor, `q` record a macro, `@` play it, `"` pick a register, `i` insert a register, `=` reindent, `w` trim the selections |
+| `C-c c` | Text case and shape | `u` upper and `l` lower (the selection, or the word), `>` / `<` cycle the case, `~` switch, `t` Title, `s` snake, `c` camel, `k` kebab, `p` Pascal, `o` sort lines, `r` reflow |
+| `C-c e` | Editing | `y` copy keeping the selection, `c` copy and let go (`A-c`), `x` cut, `P` paste before, `j` / `O` join with the next / previous line, `;` comment, `/` uncomment, `k` delete the lines, `u` / `U` duplicate them below / above, `J` / `K` move them down / up, `a` / `r` / `d` surround add / replace / delete, `.` repeat the last change, `+` / `-` the number at the cursor, `q` record a macro, `@` play it, `"` pick a register, `i` insert a register, `=` reindent, `w` trim the selections |
 | `C-c d` | Debugging Greed | `d` debug topics, `l` the debug log |
 | `C-c g` | Version control | `n` / `p` next / previous change, `s` stage, `r` revert, `b` blame, `c` every change, `f` a changed file |
 | `C-c h` | Help | `h` describe anything, `c` a command, `o` an option, `m` this mode's keys, `t` the tutor |
@@ -263,8 +283,67 @@ arrive as themselves. Use the fallbacks:
 | `C-]` / `A-]` | `C-]` works; `alt-]` may not | `C-t ]` / `C-t [` next / previous sibling |
 | `C-'` / `A-'` | Nothing usable | `C-g m x` / `C-g ' x` |
 | `C-;`, `C-.`, `C-=`, `C--`, `C-/`, `C-\` | Often nothing, or another key | Finds: `C-f` / `A-f` (no fallback for till and repeat); folds: `C-c z c` / `C-c z o`; case: `C-c c`; search: `C-c s b` |
-| `C-S-letter` | The same as `C-letter` | Turn on `C-space` first and use the plain motion |
+| `C-S-letter` motions | The same as `C-letter` | Turn on `C-space` first and use the plain motion |
+| `C-S-x` | `C-x`, the prefix | `C-c e x` |
+| `C-S-d` | `C-d`, which deletes | `C-c e u` (and `C-c e U` for `A-S-d`) |
+| `C-S-o` | `C-o`, which opens a line | `C-c e j` (`A-S-o` works: `C-c e O` too) |
+| `C-S-p` / `C-S-b` | `C-p` next pane / `C-b` next buffer | `C-x C-f` / `C-x b` |
+| `C-S-r` | `C-r`, replace next | `C-c l n` |
+| `C-S-t` | `C-t`, the text objects (so `a` selects inside `<>`) | `C-c e a` / `r` / `d` |
+| `` C-` `` | Usually `C-space` (both send the same byte), which toggles the selection | `C-c c >` / `C-c c <` |
+| `C-,` | A plain `,`, which types | `C-c e .` |
 | `C-h` | Some terminals send it for `backspace` | `backspace` still deletes |
+
+## Why these keys
+
+Flash started with a key for every idea; using it, the edits made all day
+(copy, cut, moving and duplicating lines, comments, joining, repeating)
+were three keys deep under `C-c e`, while case changes had `C-u` and
+`C-\` to themselves. So:
+
+- **One chord for what you do all the time.** Copy, cut, paste, move and
+  duplicate lines, comment, join, repeat, the command palette and the file
+  and buffer pickers each take one chord. Everything else is at most
+  three keys: a prefix (`C-g`, `C-x`, `C-c x`), then one or two.
+- **Shift makes a sibling of the plain key.** `C-d` deletes and `C-S-d`
+  duplicates; `C-o` opens a line and `C-S-o` joins one; `C-x` is the file
+  prefix and `C-S-x` cuts; `C-t` selects objects and `C-S-t` changes what's
+  around them; `C-p` and `C-b` step through panes and buffers, and
+  `C-S-p` and `C-S-b` pick from them. On motions shift still selects.
+- **Ctrl and alt stay opposites:** lines up and down (`C-u` / `A-u`),
+  duplicate below and above, join next and previous, comment and
+  uncomment, case forward and back, copy-and-let-go and copy-and-keep.
+- **The home row keeps the motions.** `C-h j k l w e a f ;` and `C-m`,
+  `C-t`, `C-s` are as they were.
+- **Copy lets go.** After copying you usually move on, so `A-c` collapses
+  the selection; `A-S-c` keeps it for when you don't.
+- **Rare things live behind prefixes and `A-x`:** case styles, plugins,
+  text size, macros, registers, formatting.
+
+What couldn't be shortened safely:
+
+- **Copy on `C-c`, cut on `C-x`:** those are the prefixes, so copy is
+  `A-c` and cut `C-S-x`.
+- **Uppercase and lowercase on one chord:** `C-u` / `A-u` now move lines.
+  Case cycles on `` C-` `` and `` A-` ``; direct upper and lower are `C-c c u`
+  and `C-c c l`.
+- **Undoing a duplicate or join as an opposite key:** `A-S-d` is duplicate
+  *above*, not "unduplicate"; `C-z` undoes either.
+- **Rename has no opposite** (`A-S-r` is left unbound rather than given a
+  made-up meaning).
+
+### The keys this changed, and what was there
+
+Checked against the keymap before the change (`greed.keymap.describe` in
+Flash's mode, which also shows Greed's keys for every mode):
+
+| Key | Before | Now |
+|---|---|---|
+| `C-u` / `A-u` | Upper / lower case | Move lines up / down. Case: `` C-` `` and `C-c c u` / `l` |
+| `C-\` / `A-\` | Cycle case forward / back | Toggle comment / uncomment. Case: `` C-` `` / `` A-` `` |
+| `C-c e y` | Copy (keeping the selection) | The same, now `flash-copy-keep` |
+| `C-c c u` / `l` | Upper / lower the selection only | The selection, or the word with nothing selected |
+| `A-c` `A-S-c` `C-S-x` `C-S-d` `A-S-d` `C-S-o` `A-S-o` `C-,` `A-x` `C-S-p` `C-S-b` `C-S-r` `C-S-t` `` C-` `` `` A-` `` | Unbound in Flash and in Greed's keys for every mode | As above |
 
 ## Conflicts with Greed's own keys
 
@@ -323,11 +402,11 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 78 tests over: plain and selecting motions, repeated
+`greed test` runs 103 tests over: plain and selecting motions, repeated
 `C-S-w`, `C-space` on and off, shrinking and crossing the anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
 object, syntax node selection, surround, the jump and its cancelling,
-marks, case changes, paste and taking it back, search and replace, line
+marks, case changes, copying (letting go and keeping the selection, the line with nothing selected, one piece per cursor), cut, paste and taking it back, moving, duplicating and joining lines (multiline and with several cursors, each one undo step), commenting and uncommenting, search and replace, line
 prompts, multiple cursors, macros, registers, counts, folds, repeating a
 change, splits and panes, buffers, saving, the key conflicts above, typing
 in pickers, prompts and the command line, keys passing through to a

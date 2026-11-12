@@ -54,11 +54,34 @@ M.keys = {
 	["alt-i"] = "dedent",
 	["ctrl-o"] = "insert-line-below",
 	["alt-o"] = "insert-line-above",
-	["ctrl-u"] = "flash-upcase",
-	["alt-u"] = "flash-downcase",
+	-- Lines move with their selections, each move one undo step. Case went
+	-- to backtick and C-c c.
+	["ctrl-u"] = "move-lines-up",
+	["alt-u"] = "move-lines-down",
 	["ctrl-z"] = "undo",
 	["alt-z"] = "redo",
 	["ctrl-y"] = "paste-over",
+
+	-- Everyday edits in one chord (see docs/README.md, "Why these keys").
+	-- Shift makes a sibling of the plain key: ctrl-X cuts where ctrl-x is a
+	-- prefix, ctrl-D duplicates where ctrl-d deletes, ctrl-O joins where
+	-- ctrl-o opens a line.
+	["alt-c"] = "flash-copy",
+	["alt-C"] = "flash-copy-keep",
+	["ctrl-X"] = "cut-or-line",
+	["ctrl-D"] = "copy-lines-down",
+	["alt-D"] = "copy-lines-up",
+	["ctrl-O"] = "join-lines",
+	["alt-O"] = "flash-join-prev",
+	["ctrl-,"] = "repeat-change",
+	["alt-x"] = "command-palette",
+	["ctrl-P"] = "pick-file",
+	["ctrl-B"] = "pick-buffer",
+	["ctrl-R"] = "rename",
+	-- Surround, on a short prefix; C-c e a/r/d stay too.
+	["ctrl-T a"] = "surround-add",
+	["ctrl-T r"] = "surround-replace",
+	["ctrl-T d"] = "surround-delete",
 	["alt-y"] = "flash-unpaste",
 	["ctrl-s"] = "select-next-match",
 	["alt-s"] = "flash-add-prev-match",
@@ -70,8 +93,10 @@ M.keys = {
 	["alt-m"] = "flash-jump-back",
 
 	-- Punctuation
-	["ctrl-\\"] = "flash-case-cycle",
-	["alt-\\"] = "flash-case-cycle-back",
+	["ctrl-\\"] = "toggle-comment",
+	["alt-\\"] = "flash-uncomment",
+	["ctrl-`"] = "flash-case-cycle",
+	["alt-`"] = "flash-case-cycle-back",
 	["ctrl-["] = "flash-expand",
 	["alt-["] = "flash-shrink",
 	["ctrl-]"] = "flash-sibling-next",
@@ -162,8 +187,10 @@ M.keys = {
 	["ctrl-c s g"] = "grep",
 
 	-- C-c c: text transformations
-	["ctrl-c c u"] = "uppercase",
-	["ctrl-c c l"] = "lowercase",
+	["ctrl-c c u"] = "flash-upcase",
+	["ctrl-c c l"] = "flash-downcase",
+	["ctrl-c c >"] = "flash-case-cycle",
+	["ctrl-c c <"] = "flash-case-cycle-back",
 	["ctrl-c c ~"] = "switch-case",
 	["ctrl-c c t"] = "title-case",
 	["ctrl-c c s"] = "snake-case",
@@ -174,13 +201,17 @@ M.keys = {
 	["ctrl-c c r"] = "reflow",
 
 	-- C-c e: editing actions
-	["ctrl-c e y"] = "copy-or-line",
+	["ctrl-c e y"] = "flash-copy-keep",
+	["ctrl-c e c"] = "flash-copy",
 	["ctrl-c e x"] = "cut-or-line",
 	["ctrl-c e P"] = "paste-before",
 	["ctrl-c e j"] = "join-lines",
 	["ctrl-c e ;"] = "toggle-comment",
 	["ctrl-c e k"] = "delete-lines-at-cursor",
 	["ctrl-c e u"] = "copy-lines-down",
+	["ctrl-c e U"] = "copy-lines-up",
+	["ctrl-c e O"] = "flash-join-prev",
+	["ctrl-c e /"] = "flash-uncomment",
 	["ctrl-c e J"] = "move-lines-down",
 	["ctrl-c e K"] = "move-lines-up",
 	["ctrl-c e a"] = "surround-add",
