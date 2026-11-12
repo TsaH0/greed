@@ -64,6 +64,24 @@ test("ctrl-s adds the next match of the word as a selection, alt-s the previous"
 	check(t, "a b |a c a", "alt-s alt-s", "^a| b ^a| c a")
 end)
 
+test("ctrl-s takes the word the cursor is just after, never the space or line break", function(t)
+	check(t, "foo| bar foo", "ctrl-s", "^foo| bar foo")
+	check(t, "foo| bar foo", "ctrl-s ctrl-s", "^foo| bar ^foo|")
+	-- At the end of a line it stays on that line.
+	check(t, "foo|\nfoo", "ctrl-s", "^foo|\nfoo")
+	check(t, "foo|\nfoo", "ctrl-s ctrl-s", "^foo|\n^foo|")
+	check(t, "a foo|\nb foo", "alt-s", "a ^foo|\nb foo")
+	-- In blanks with no word beside it, nothing is selected.
+	check(t, "x |\nfoo", "ctrl-s", "x |\nfoo")
+	check(t, "a  |  b", "ctrl-s", "a  |  b")
+end)
+
+test("the word just before the cursor is also what case changes and C-c s w take", function(t)
+	check(t, "one two|", "ctrl-c c u", "one TWO|")
+	check(t, "one two|\nx", "ctrl-`", "one TWO|\nx")
+	check(t, "x foo|\nfoo", "ctrl-c s w", "x foo\n^foo|")
+end)
+
 test("multiple cursors: below, above, split, all and back to one", function(t)
 	check(t, "a|b\ncd", "ctrl-c m j", "a|b\nc|d")
 	check(t, "ab\nc|d", "ctrl-c m k", "a|b\nc|d")

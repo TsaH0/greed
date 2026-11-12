@@ -83,7 +83,7 @@ M.keys = {
 	["ctrl-T r"] = "surround-replace",
 	["ctrl-T d"] = "surround-delete",
 	["alt-y"] = "flash-unpaste",
-	["ctrl-s"] = "select-next-match",
+	["ctrl-s"] = "flash-add-next-match",
 	["alt-s"] = "flash-add-prev-match",
 	["ctrl-r"] = "flash-replace-next",
 	["alt-r"] = "flash-replace-prev",
@@ -163,7 +163,7 @@ M.keys = {
 	["ctrl-c n"] = "flash-count",
 
 	-- C-c m: multiple cursors
-	["ctrl-c m n"] = "select-next-match",
+	["ctrl-c m n"] = "flash-add-next-match",
 	["ctrl-c m p"] = "flash-add-prev-match",
 	["ctrl-c m a"] = "select-all-matches",
 	["ctrl-c m j"] = "copy-selection-down",

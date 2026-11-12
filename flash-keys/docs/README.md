@@ -389,7 +389,8 @@ and terminals, which have layers of their own ahead of a style's.
   line-number labels aren't there.
 - A jump lands one cursor, even with several.
 - `C-s` / `A-s` with nothing selected select the word first; the next
-  press adds the match. That's Greed's `select-next-match`, as in VS Code.
+  press adds the match, as in VS Code. The word is the one the cursor is
+  in or just after; in blanks with no word beside it, nothing is selected.
 - Numeric counts are `C-c n N keys` rather than a bare number, since digits
   type in a style without modes. Commands that ignore counts ignore them
   here too.
@@ -402,7 +403,7 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 103 tests over: plain and selecting motions, repeated
+`greed test` runs 105 tests over: plain and selecting motions, repeated
 `C-S-w`, `C-space` on and off, shrinking and crossing the anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
 object, syntax node selection, surround, the jump and its cancelling,

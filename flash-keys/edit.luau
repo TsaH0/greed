@@ -12,6 +12,40 @@ local text = core.text
 
 local M = {}
 
+--- The word the cursor is in or touches, for a cursor between characters:
+--- the one after it, or else the one it's just after. Nil in blanks or at
+--- a line's end with no word before it, where Greed's own `word_at` would
+--- take the spaces or the line break.
+function M.word_near(buffer: greed.Buffer, pos: number): (number?, number?)
+	if text.class(buffer:char_at(pos)) == "word" then
+		return text.word_at(buffer, pos)
+	end
+	if pos > 0 then
+		local before = buffer:prev_char(pos)
+		if text.class(buffer:char_at(before)) == "word" then
+			return text.word_at(buffer, before)
+		end
+	end
+	return nil, nil
+end
+
+-- Selects the word near the primary cursor when nothing is selected.
+-- Returns whether it did; with no word there it says so.
+local function select_word(ctx: greed.Context): boolean
+	local sel = ctx.view:selection()
+	local range = sel.ranges[sel.primary]
+	if range.anchor ~= range.head then
+		return false
+	end
+	local from, to = M.word_near(ctx.buffer, range.head)
+	if from and to then
+		ctx.view:set_selection({ ranges = { { anchor = from, head = to } }, primary = 1 })
+	else
+		greed.echo("no word at the cursor")
+	end
+	return true
+end
+
 -- Runs `command` on each selection, or on the word at each cursor that has
 -- none, leaving each cursor after what changed (as Emacs's M-u does).
 local function on_words(ctx: greed.Context, command: string)
@@ -20,8 +54,10 @@ local function on_words(ctx: greed.Context, command: string)
 	local had = text.anything_selected(sel)
 	if not had then
 		for i, range in sel.ranges do
-			local from, to = text.word_at(buffer, range.head)
-			sel.ranges[i] = { anchor = from, head = to }
+			local from, to = M.word_near(buffer, range.head)
+			if from and to then
+				sel.ranges[i] = { anchor = from, head = to }
+			end
 		end
 		view:set_selection(sel)
 	end
@@ -82,7 +118,11 @@ for _, back in { false, true } do
 			local range = sel.ranges[sel.primary]
 			local from, to = text.span(range)
 			if from == to then
-				from, to = text.word_at(ctx.buffer, range.head)
+				local a, b = M.word_near(ctx.buffer, range.head)
+				if a == nil or b == nil then
+					return
+				end
+				from, to = a, b
 			end
 			local now = M.case_of(ctx.buffer:slice(from, to))
 			local next = if back then BACK[now] else CYCLE[now]
@@ -239,23 +279,22 @@ for _, back in { false, true } do
 	})
 end
 
-greed.command({
-	name = "flash-add-prev-match",
-	doc = "Select the word at the cursor, then add the previous match of it as another selection",
-	run = function(ctx)
-		local sel = ctx.view:selection()
-		local range = sel.ranges[sel.primary]
-		if range.anchor == range.head then
-			local from, to = text.word_at(ctx.buffer, range.head)
-			ctx.view:set_selection({ ranges = { { anchor = from, head = to } }, primary = 1 })
-			return
-		end
-		if #sel.ranges == 1 then
-			greed.run("search-selection")
-		end
-		greed.run("search-prev-add")
-	end,
-})
+for _, back in { false, true } do
+	greed.command({
+		name = if back then "flash-add-prev-match" else "flash-add-next-match",
+		doc = `Select the word at the cursor, then add the {if back then "previous" else "next"} `
+			.. "match of it as another selection",
+		run = function(ctx)
+			if select_word(ctx) then
+				return
+			end
+			if #ctx.view:selection().ranges == 1 then
+				greed.run("search-selection")
+			end
+			greed.run(if back then "search-prev-add" else "search-next-add")
+		end,
+	})
+end
 
 greed.command({
 	name = "flash-search-word",
@@ -264,7 +303,11 @@ greed.command({
 		local sel = ctx.view:selection()
 		local range = sel.ranges[sel.primary]
 		if range.anchor == range.head then
-			local from, to = text.word_at(ctx.buffer, range.head)
+			local from, to = M.word_near(ctx.buffer, range.head)
+			if from == nil or to == nil then
+				greed.echo("no word at the cursor")
+				return
+			end
 			ctx.view:set_selection({ ranges = { { anchor = from, head = to } }, primary = 1 })
 		end
 		greed.run("search-selection")
