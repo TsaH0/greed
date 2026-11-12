@@ -147,16 +147,16 @@ selection on, and typing replaces it.
 The cursor needn't be inside the object. As Vim does with quotes (and
 targets.vim and mini.ai with everything), when it's in none Flash takes
 the next one that starts on the cursor's line, or else the nearest one
-before or after: on `|foo(a, b)`, `C-t C-r` selects `a, b`, and at the end
+before or after: on `|foo(a, b)`, `C-t C-b` selects `a, b`, and at the end
 of `foo(a, b) x|` it reaches back for the same. This works for brackets,
 quotes, tags and functions; words, lines, paragraphs and sentences are
 always around the cursor.
 
 | Inside | Around | Object |
 |---|---|---|
-| `C-t C-b` | `A-t A-b` | Square brackets `[]` |
+| `C-t C-b` | `A-t A-b` | Parentheses `()` (Vim's `ib`) |
+| `C-t C-r` | `A-t A-r` | Square brackets `[]` |
 | `C-t C-a` | `A-t A-a` | Angle brackets `<>` |
-| `C-t C-r` | `A-t A-r` | Parentheses `()` |
 | `C-t C-c` | `A-t A-c` | Curly braces `{}` |
 | `C-t C-n` | `A-t A-n` | The nearest bracket pair of any kind |
 | `C-t C-q` | `A-t A-q` | Quotes: the innermost `"`, `'` or `` ` `` pair |

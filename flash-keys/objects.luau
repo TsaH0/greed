@@ -147,9 +147,9 @@ end
 --- The objects, by the key after ctrl-t or alt-t: a name for the docs and
 --- the key core.textobjects.find takes, or a function of its own.
 M.objects = {
-	b = { name = "square brackets", key = "[", seek = { "[" } },
+	b = { name = "parentheses", key = "(", seek = { "(" } },
 	a = { name = "angle brackets", key = "<", seek = { "<" } },
-	r = { name = "parentheses", key = "(", seek = { "(" } },
+	r = { name = "square brackets", key = "[", seek = { "[" } },
 	c = { name = "curly braces", key = "{", seek = { "{" } },
 	n = { name = "nearest bracket pair", key = "m", seek = { "(", "[", "{", "<" } },
 	q = { name = "quotes (any kind, innermost)", find = quotes, seek = { '"', "'", "`" } },

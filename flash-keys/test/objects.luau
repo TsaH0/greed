@@ -9,17 +9,17 @@ local function check(t: test.TestContext, before: string, keys: string, after: s
 end
 
 test("ctrl-t selects inside brackets, alt-t around them", function(t)
-	check(t, "x[a|b]y", "ctrl-t ctrl-b", "x[^ab|]y")
-	check(t, "x[a|b]y", "alt-t alt-b", "x^[ab]|y")
-	check(t, "f(a|b)", "ctrl-t ctrl-r", "f(^ab|)")
-	check(t, "f(a|b)", "alt-t alt-r", "f^(ab)|")
+	check(t, "x[a|b]y", "ctrl-t ctrl-r", "x[^ab|]y")
+	check(t, "x[a|b]y", "alt-t alt-r", "x^[ab]|y")
+	check(t, "f(a|b)", "ctrl-t ctrl-b", "f(^ab|)")
+	check(t, "f(a|b)", "alt-t alt-b", "f^(ab)|")
 	check(t, "{ a| }", "ctrl-t ctrl-c", "{^ a |}")
 	check(t, "<a|b>", "ctrl-t ctrl-a", "<^ab|>")
 end)
 
 test("the key after ctrl-t or alt-t works without its modifier too", function(t)
-	check(t, "x[a|b]y", "ctrl-t b", "x[^ab|]y")
-	check(t, "x[a|b]y", "alt-t b", "x^[ab]|y")
+	check(t, "x[a|b]y", "ctrl-t r", "x[^ab|]y")
+	check(t, "x[a|b]y", "alt-t r", "x^[ab]|y")
 end)
 
 test("quotes take the innermost pair of any kind", function(t)
@@ -45,18 +45,18 @@ test("a tag", function(t)
 end)
 
 test("an object's selection is carried on with shift", function(t)
-	check(t, "f(a|b) c", "ctrl-t ctrl-r ctrl-L", "f(^ab)| c")
-	check(t, "f(a|b) c", "ctrl-t ctrl-r ctrl-l", "f(ab)| c")
+	check(t, "f(a|b) c", "ctrl-t ctrl-b ctrl-L", "f(^ab)| c")
+	check(t, "f(a|b) c", "ctrl-t ctrl-b ctrl-l", "f(ab)| c")
 end)
 
 test("each cursor gets its own object", function(t)
-	check(t, "(a|) (b|)", "ctrl-t ctrl-r", "(^a|) (^b|)")
+	check(t, "(a|) (b|)", "ctrl-t ctrl-b", "(^a|) (^b|)")
 end)
 
 test("outside any object, the next one on the line is taken, as Vim does", function(t)
-	check(t, "|foo(a, b) x", "ctrl-t ctrl-r", "foo(^a, b|) x")
-	check(t, "|foo(a, b) x", "alt-t alt-r", "foo^(a, b)| x")
-	check(t, "|x = [1, 2]", "ctrl-t ctrl-b", "x = [^1, 2|]")
+	check(t, "|foo(a, b) x", "ctrl-t ctrl-b", "foo(^a, b|) x")
+	check(t, "|foo(a, b) x", "alt-t alt-b", "foo^(a, b)| x")
+	check(t, "|x = [1, 2]", "ctrl-t ctrl-r", "x = [^1, 2|]")
 	check(t, "|if x { y }", "ctrl-t ctrl-c", "if x {^ y |}")
 	check(t, '|say "hi" now', "ctrl-t ctrl-q", 'say "^hi|" now')
 	check(t, "|say 'hi' now", "alt-t alt-q", "say ^'hi'| now")
@@ -65,19 +65,19 @@ test("outside any object, the next one on the line is taken, as Vim does", funct
 end)
 
 test("with none after it on the line, the nearest one before or after", function(t)
-	check(t, "foo(a, b) x|", "ctrl-t ctrl-r", "foo(^a, b|) x")
-	check(t, "(a)\n|\n\n\n(b)", "ctrl-t ctrl-r", "(^a|)\n\n\n\n(b)")
-	check(t, "(a)\n\n\n|\n(b)", "ctrl-t ctrl-r", "(a)\n\n\n\n(^b|)")
+	check(t, "foo(a, b) x|", "ctrl-t ctrl-b", "foo(^a, b|) x")
+	check(t, "(a)\n|\n\n\n(b)", "ctrl-t ctrl-b", "(^a|)\n\n\n\n(b)")
+	check(t, "(a)\n\n\n|\n(b)", "ctrl-t ctrl-b", "(a)\n\n\n\n(^b|)")
 	-- The next one on the line wins over a nearer one before.
-	check(t, "(a)| x x x x (b)", "ctrl-t ctrl-r", "(a) x x x x (^b|)")
+	check(t, "(a)| x x x x (b)", "ctrl-t ctrl-b", "(a) x x x x (^b|)")
 end)
 
 test("inside an object, that one is still taken", function(t)
-	check(t, "(a |b) (c)", "ctrl-t ctrl-r", "(^a b|) (c)")
+	check(t, "(a |b) (c)", "ctrl-t ctrl-b", "(^a b|) (c)")
 end)
 
 test("each cursor takes its own nearest object", function(t)
-	check(t, "|f(a)\n|g(b)", "ctrl-t ctrl-r", "f(^a|)\ng(^b|)")
+	check(t, "|f(a)\n|g(b)", "ctrl-t ctrl-b", "f(^a|)\ng(^b|)")
 end)
 
 test("functions come from the syntax tree, the next one if the cursor's in none", function(t)
@@ -89,7 +89,7 @@ test("functions come from the syntax tree, the next one if the cursor's in none"
 end)
 
 test("with no object around the cursor nothing changes", function(t)
-	check(t, "a|b", "ctrl-t ctrl-r", "a|b")
+	check(t, "a|b", "ctrl-t ctrl-b", "a|b")
 end)
 
 test("functions and syntax nodes come from the syntax tree", function(t)
