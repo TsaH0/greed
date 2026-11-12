@@ -66,13 +66,13 @@ test("alt-c copies the selection and stops selecting", function(t)
 	-- The next motion selects afresh rather than growing what was copied.
 	t:keys("ctrl-w")
 	t:expect("one ^two|")
-	-- And pasting after a plain motion goes in at the cursor.
+	-- And pasting replaces what the motion selected.
 	t:keys("ctrl-y")
-	t:expect("one twoone |")
+	t:expect("one one |")
 end)
 
 test("alt-c copies what a plain motion selected", function(t)
-	check(t, "|one two", "ctrl-w alt-c alt-a ctrl-y", "one twoone |")
+	check(t, "|one two", "ctrl-w alt-c alt-a ctrl-space ctrl-y", "one twoone |")
 end)
 
 test("alt-c with nothing selected copies the line, whole lines pasting above", function(t)
@@ -81,9 +81,8 @@ end)
 
 test("alt-c copies every cursor's selection, one piece each", function(t)
 	check(t, "^a| 1\n^b| 2", "alt-c", "a| 1\nb| 2")
-	t:keys("alt-a ctrl-y")
+	t:keys("alt-a ctrl-space ctrl-y")
 	t:expect("a 1a|\nb 2b|")
-	-- alt-a selected " 1" and " 2" softly, so the paste went in after them.
 end)
 
 test("alt-C copies and keeps the selection, so shift carries it on", function(t)
@@ -95,7 +94,7 @@ test("alt-C copies and keeps the selection, so shift carries it on", function(t)
 end)
 
 test("ctrl-X cuts the selection, or the line with nothing selected", function(t)
-	check(t, "^ab| cd", "ctrl-X alt-a ctrl-y", " cdab|")
+	check(t, "^ab| cd", "ctrl-X alt-a ctrl-space ctrl-y", " cdab|")
 	check(t, "ab\nc|d\nef", "ctrl-X", "ab\n|ef")
 	check(t, "ab\nc|d\nef", "ctrl-X ctrl-y", "ab\ncd\n|ef")
 end)
@@ -139,7 +138,7 @@ end)
 -- Repeat, pickers, rename
 
 test("ctrl-, does the last edit again", function(t)
-	check(t, "|a\nb", "x ctrl-j ctrl-a ctrl-,", "xa\nx|b")
+	check(t, "|a\nb", "x ctrl-j ctrl-a ctrl-space ctrl-,", "xa\nx|b")
 end)
 
 test("alt-x, ctrl-P and ctrl-B open the command, file and buffer pickers", function(t)

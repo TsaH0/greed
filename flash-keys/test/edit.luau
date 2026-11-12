@@ -45,17 +45,17 @@ test("ctrl-z undoes, alt-z redoes", function(t)
 end)
 
 test("ctrl-y pastes and alt-y takes the paste back, only while it's the last change", function(t)
-	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-y", "ab cab|")
+	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-space ctrl-y", "ab cab|")
 	t:keys("alt-y")
 	t:expect("ab c|")
-	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-y x alt-y", "ab cabx|")
+	check(t, "^ab| c", "ctrl-c e y alt-S alt-a ctrl-space ctrl-y x alt-y", "ab cabx|")
 end)
 
 test("marks are set with ctrl-' and gone back to with alt-'", function(t)
 	check(t, "a|bc def", "ctrl-' q alt-a alt-' q", "a|bc def")
 	check(t, "a|bc def", "ctrl-g m q alt-a ctrl-g ' q", "a|bc def")
 	-- They move with edits.
-	check(t, "abc |def", "ctrl-' q ctrl-a x x alt-a alt-' q", "xxabc |def")
+	check(t, "abc |def", "ctrl-' q ctrl-a ctrl-space x x alt-a alt-' q", "xxabc |def")
 end)
 
 test("ctrl-s adds the next match of the word as a selection, alt-s the previous", function(t)
@@ -153,5 +153,5 @@ test("comments, joins and moving lines in C-c e", function(t)
 end)
 
 test("macros record and play through C-c e", function(t)
-	check(t, "|ab\ncd", "ctrl-c e q ctrl-a x ctrl-j ctrl-c e q ctrl-c e @", "xab\nx|cd")
+	check(t, "|ab\ncd", "ctrl-c e q ctrl-a ctrl-space x ctrl-j ctrl-space ctrl-c e q ctrl-c e @", "xab\nx|cd")
 end)

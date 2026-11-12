@@ -9,18 +9,25 @@
 --     grows it the other way.
 --   * ctrl-space and esc stop selecting: each range collapses to its head.
 --
--- What a plain motion selects is "soft": typing, enter, backspace and
--- pasting drop it and type at the cursor, so moving and then typing never
--- deletes what the motion went over. Commands that act on a selection
--- (delete, copy, case, comment, surround) take it. Selections made any
--- other way (shift, text objects, ctrl-s) are replaced by typing, as
--- they always were.
+-- Typing replaces whatever is selected, what a plain motion selected
+-- included, and backspace and delete delete it. With the option
+-- `flash-type-at-cursor` on, what a plain motion selected is "soft"
+-- instead: typing, enter, backspace, delete and pasting drop it and go in
+-- at the cursor, and only selections made on purpose (shift, text
+-- objects, ctrl-s) are replaced.
 --
 -- Positions are between characters (the style's cursor is a bar).
 
 local greed = require("@greed")
 
 local M = {}
+
+greed.option.define({
+	name = "flash-type-at-cursor",
+	doc = "In the flash style, typing after a plain motion goes in at the cursor "
+		.. "rather than replacing what the motion selected",
+	default = false,
+})
 
 -- Extend mode, by view and the buffer it shows: with it on, plain motions
 -- extend as shifted ones do (C-x space, for terminals that can't send
@@ -271,7 +278,11 @@ greed.on("command.run", function(event: greed.CommandRun)
 		return
 	end
 	local view = greed.view()
-	if TYPING[event.name] and M.is_soft(view) then
+	if
+		TYPING[event.name]
+		and greed.option.get("flash-type-at-cursor") == true
+		and M.is_soft(view)
+	then
 		local selection = view:selection()
 		for i, range in selection.ranges do
 			selection.ranges[i] = { anchor = range.head, head = range.head }

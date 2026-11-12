@@ -24,6 +24,14 @@ M.keys = {
 	["ctrl-S"] = "flash-collapse-anchor",
 	["alt-S"] = "flash-collapse-head",
 	esc = "flash-escape",
+	-- Delete the selection, or a character, as in most editors (the typing
+	-- role's backspace and delete only ever take a character).
+	backspace = "erase-back",
+	delete = "erase-forward",
+	-- enter and tab replace the selection too; a multi-line selection's tab
+	-- indents its lines.
+	enter = "type-newline",
+	tab = "type-tab",
 
 	-- Character finds, Vim's f F t T ; ,
 	["ctrl-f"] = "flash-find-next",

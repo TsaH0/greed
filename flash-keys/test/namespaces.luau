@@ -60,7 +60,7 @@ test("ctrl-- folds the block and alt-- opens it", function(t)
 end)
 
 test("C-c e . repeats the last change", function(t)
-	check(t, "|a\nb", "x ctrl-j ctrl-a ctrl-c e .", "xa\nx|b")
+	check(t, "|a\nb", "x ctrl-j ctrl-a ctrl-space ctrl-c e .", "xa\nx|b")
 end)
 
 test("C-c e + and - change the number at the cursor", function(t)

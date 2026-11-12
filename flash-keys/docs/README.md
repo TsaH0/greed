@@ -58,11 +58,17 @@ range has an anchor and a head, and the cursor sits between characters.
 - **Act on what's selected:** `C-d` deletes it (`C-w C-d` deletes a word,
   `A-a C-d` to the line's end), `A-c` copies it, `` C-` `` changes its case,
   `C-\` comments its lines, `C-S-t a (` puts brackets round it.
-- **Typing after a motion types at the cursor:** what a plain motion
-  selected is dropped when you type, press `enter` or `backspace` or paste,
-  so moving and then typing never deletes what you moved over. To replace
-  text by typing, select it on purpose: with shift, a text object
-  (`C-t w` then type replaces the word), `C-s`, or `C-x h`.
+- **Typing replaces what's selected,** whatever selected it: `C-w x`
+  puts `x` in place of the word, `A-a` then typing replaces the rest of the
+  line. `enter`, `tab` and paste replace it too, and `backspace` and
+  `delete` delete it.
+- **To type at a place you moved to without replacing anything,** press
+  `C-space` first: `A-a C-space` then typing appends to the line, `C-f ,
+  C-space` types after the comma.
+- If you'd rather typing after a plain motion always went in at the
+  cursor (replacing only what shift, a text object or `C-s` selected),
+  turn on `flash-type-at-cursor`:
+  `require("@greed").option.set("flash-type-at-cursor", true)`.
 - **Copying with `A-c` stops selecting** too, so the next motion selects
   afresh. `A-S-c` copies and keeps the selection.
 - **Each cursor selects on its own**, so all of this works with several.
@@ -417,10 +423,11 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 113 tests over: every motion selecting and selecting
+`greed test` runs 116 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
-paste after a motion going in at the cursor, shrinking and crossing the
+paste replacing what a motion selected (and going in at the cursor with
+`flash-type-at-cursor`), shrinking and crossing the
 anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
 object, syntax node selection, surround, the jump and its cancelling,
