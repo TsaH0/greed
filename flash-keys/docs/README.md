@@ -42,6 +42,7 @@ range has an anchor and a head, and the cursor sits between characters.
 |---|---|---|
 | `C-w` | Selects the next word (with the space after it) | Selects the word after that |
 | `C-e` | Selects the next word on its own | The next one |
+| `C-q` | Selects the next WORD, punctuation and all | The next one |
 | `A-a` | Selects to the end of the line | Selects the next line, up to its line break |
 | `C-a` | Selects back to the first non-blank, then the line start | The line before |
 | `C-f x` | Selects through the next `x` | Through the one after |
@@ -98,7 +99,8 @@ it carries the selection on instead.
 | `C-j` | Down a line (moves only) | `A-j` | Up a line |
 | `C-k` | Up a line (moves only) | `A-k` | Down a line |
 | `C-w` | Next word start | `A-w` | Previous word start |
-| `C-e` | Next word end | `A-e` | Previous word end |
+| `C-e` | The next word on its own, no spaces | `A-e` | Back to the previous word's end |
+| `C-q` | The next WORD, punctuation and all (`#include`, `#[derive(Debug)]`) | `A-q` | The previous WORD |
 | `C-a` | First non-blank, then line start, then the line before | `A-a` | Line end, then the next line |
 | `C-v` | Page down (moves only) | `A-v` | Page up |
 | `C-g g` | To the buffer's start, moving only (`C-g G` extends) | `A-g g` | To its end (`A-g G` extends) |
@@ -250,6 +252,9 @@ typing to narrow the matches down.
 | `C-g r` | Go up or down the lines typed, `+3` or `-3` |
 | `C-g n` / `A-g n` | Next / previous problem |
 | `C-g w` | Jump to a word by its label |
+| `C-g o` | Outline of this file (functions, types, headings), to jump to one |
+| `C-g s` | Symbols in the whole project (language server) |
+| `C-g ]` / `C-g [` | Select the next / previous function |
 | `C-g m x` / `C-g ' x` | Set / go to mark `x` |
 
 ### C-x: files and windows
@@ -437,9 +442,9 @@ and terminals, which have layers of their own ahead of a style's.
 
 ## What isn't implemented, or only partly
 
-- `C-q` / `A-q` (next / previous quickfix item) are unbound: Greed has no
-  command that steps through the grep panel's results. `C-c q g` fills the
-  panel and you move in it as in any list.
+- Next / previous quickfix item has no key (`C-q` / `A-q` went to the
+  WORD motion): Greed has no command that steps through the grep panel's
+  results. `C-c q g` fills the panel and you move in it as in any list.
 - `C-c s v`, Vim's "very magic" regex search, is unbound. Greed's searches
   and `:s` take Rust regexes, which are close to `\v` already: `(foo|bar)`
   groups and alternates without backslashes. `:%s/(foo|bar)/baz/g` works
@@ -462,7 +467,7 @@ and terminals, which have layers of their own ahead of a style's.
 
 ### Tested and not
 
-`greed test` runs 136 tests over: every motion selecting and selecting
+`greed test` runs 139 tests over: every motion selecting and selecting
 the next piece again, shift carrying the selection on, `C-space`
 stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
 paste replacing what a motion selected (and going in at the cursor with
