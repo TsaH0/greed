@@ -20,7 +20,7 @@ local MOTIONS: { { string } } = {
 
 M.keys = {
 	-- Selection
-	["ctrl-space"] = "flash-toggle-selection",
+	["ctrl-space"] = "flash-stop-selection",
 	["ctrl-S"] = "flash-collapse-anchor",
 	["alt-S"] = "flash-collapse-head",
 	esc = "flash-escape",
@@ -44,12 +44,14 @@ M.keys = {
 	["alt-p"] = "flash-pane-prev",
 	["ctrl-n"] = "flash-search-next",
 	["alt-n"] = "flash-search-prev",
+	["ctrl-N"] = "flash-select-search-next",
+	["alt-N"] = "flash-select-search-prev",
 	["ctrl-/"] = "search",
 	["alt-/"] = "search-back",
 
 	-- Editing pairs
-	["ctrl-d"] = "erase-forward",
-	["alt-d"] = "erase-back",
+	["ctrl-d"] = "flash-delete-forward",
+	["alt-d"] = "flash-delete-back",
 	["ctrl-i"] = "indent",
 	["alt-i"] = "dedent",
 	["ctrl-o"] = "insert-line-below",
@@ -90,6 +92,7 @@ M.keys = {
 
 	-- Jumping
 	["ctrl-m"] = "flash-jump",
+	["ctrl-M"] = "flash-select-jump",
 	["alt-m"] = "flash-jump-back",
 
 	-- Punctuation
@@ -143,6 +146,9 @@ M.keys = {
 	["ctrl-x :"] = "command-line",
 	["ctrl-x ctrl-c"] = "quit-ask",
 	["ctrl-x h"] = "select-all",
+	-- Extend mode: plain motions carry the selection on, as shift does,
+	-- until ctrl-space. For terminals that can't send ctrl with shift.
+	["ctrl-x space"] = "flash-toggle-selection",
 	["ctrl-x u"] = "undo-tree",
 	-- What alt-p, alt-t, alt-r, alt-space, alt-m, alt-f, alt-w, alt-W,
 	-- alt-F, alt-n, alt-= and alt-- do in other styles, which flash's own keys take.

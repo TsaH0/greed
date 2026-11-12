@@ -81,4 +81,34 @@ greed.command({
 	end,
 })
 
+-- ctrl-d and alt-d delete what's selected, soft selections included (so
+-- ctrl-w ctrl-d deletes the word), or the character after or before each
+-- cursor with nothing selected. backspace and delete stay Greed's typing
+-- keys, which drop a soft selection first.
+for _, back in { false, true } do
+	greed.command({
+		name = if back then "flash-delete-back" else "flash-delete-forward",
+		doc = if back
+			then "Delete the selections, or the character before each cursor"
+			else "Delete the selections, or the character after each cursor",
+		run = function(ctx)
+			local buffer = ctx.buffer
+			greed.history.end_group()
+			buffer:edit(function(e)
+				for _, range in ctx.view:selection().ranges do
+					local from, to = core.text.span(range)
+					if from ~= to then
+						e:delete(from, to)
+					elseif back and from > 0 then
+						e:delete(buffer:prev_char(from), from)
+					elseif not back and to < buffer:len() then
+						e:delete(from, buffer:next_char(from))
+					end
+				end
+			end)
+			selection.remember(ctx.view)
+		end,
+	})
+end
+
 return M

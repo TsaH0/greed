@@ -101,9 +101,12 @@ local function choose(buffer: greed.Buffer, targets: { Target }): number?
 	end
 end
 
+for _, shift in { false, true } do
 greed.command({
-	name = "flash-jump",
-	doc = "Jump to a character on screen: type it, then the label on the one to go to",
+	name = if shift then "flash-select-jump" else "flash-jump",
+	doc = if shift
+		then "Extend the selection to a character on screen: type it, then its label"
+		else "Jump to a character on screen: type it, then the label on the one to go to",
 	run = function(ctx)
 		local char = find.char_of(greed.next_key())
 		if char == nil then
@@ -124,7 +127,7 @@ greed.command({
 			return
 		end
 		before[view:id()] = view:selection()
-		local extend = selection.active(view)
+		local extend = selection.active(view, shift)
 		local sel = view:selection()
 		local primary = sel.ranges[sel.primary]
 		local anchor = if extend then primary.anchor else pos
@@ -136,6 +139,7 @@ greed.command({
 		end
 	end,
 })
+end
 
 greed.command({
 	name = "flash-jump-back",

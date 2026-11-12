@@ -189,7 +189,7 @@ greed.command({
 			end
 			return
 		end
-		selection.move(ctx, function()
+		selection.teleport(ctx, function()
 			return pos
 		end)
 	end,
@@ -206,7 +206,7 @@ local function goto_line(ctx: greed.Context, relative: boolean)
 	local buffer = ctx.buffer
 	local line = if relative then buffer:line_of(ctx.view:cursor()) + n else n - 1
 	line = math.clamp(line, 0, buffer:line_count() - 1)
-	selection.move(ctx, function()
+	selection.teleport(ctx, function()
 		return buffer:line_start(line)
 	end)
 end
@@ -338,19 +338,22 @@ greed.command({
 	end,
 })
 
--- Searches and motions that select their match: they extend an active
--- selection to the match, and otherwise select it, as Greed's do.
-for name, command in
+-- Searches select their match, as Greed's do; with shift they extend the
+-- selection to it.
+for _, spec in
 	{
-		["flash-search-next"] = "search-next",
-		["flash-search-prev"] = "search-prev",
+		{ "flash-search-next", "search-next", false },
+		{ "flash-search-prev", "search-prev", false },
+		{ "flash-select-search-next", "search-next", true },
+		{ "flash-select-search-prev", "search-prev", true },
 	}
 do
+	local name, command, shift = spec[1], spec[2], spec[3]
 	greed.command({
 		name = name,
-		doc = `{command}; with a selection active, extend it to the match`,
+		doc = if shift then `{command}, extending the selection to the match` else command,
 		run = function(ctx)
-			selection.wrap(ctx, command, false, true)
+			selection.wrap(ctx, command, shift, true)
 		end,
 	})
 end

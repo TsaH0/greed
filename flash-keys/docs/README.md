@@ -1,8 +1,9 @@
 # Flash Keys
 
-An editing style for Greed without modes: ctrl does a thing, alt does its
-opposite, shift selects, `ctrl-space` keeps selecting until you press it
-again, and ordinary keys type. It mixes Emacs's modifier keys, Helix's
+An editing style for Greed without modes, selection first: every motion
+selects what it moves over, shift carries the selection on, `ctrl-space`
+stops selecting, ctrl does a thing and alt its opposite, and ordinary
+keys type. It mixes Emacs's modifier keys, Helix's
 selection-first editing, Vim's precise motions and a few of Neovim's
 commands.
 
@@ -34,32 +35,44 @@ remove the `editing-style` line), and delete the folder to remove it.
 
 ## How selecting works
 
-Every range has an anchor that stays put and a head that motions move.
-The cursor sits between characters.
+Selection first, as in Helix and Kakoune: you select, then act. Every
+range has an anchor and a head, and the cursor sits between characters.
 
-| You have | `ctrl-w` | `ctrl-W` (shift) |
+| Press | Does | Again |
 |---|---|---|
-| Nothing selected | Moves to the next word | Starts a selection and selects to the next word |
-| Something selected (a text object, a shifted motion) | Extends the selection | Extends the selection |
-| `ctrl-space` on | Extends the selection | Extends the selection |
+| `C-w` | Selects the next word (with the space after it) | Selects the word after that |
+| `C-e` | Selects the next word on its own | The next one |
+| `A-a` | Selects to the end of the line | Selects the next line, up to its line break |
+| `C-a` | Selects back to the first non-blank, then the line start | The line before |
+| `C-l` / `C-h` | Selects the next / previous character | The one after / before |
+| `C-j` / `C-k` | Selects down / up a line, keeping the column | The next line down / up |
+| `C-f x` | Selects through the next `x` | Through the one after |
 
-- `ctrl-space` turns persistent selection on: every motion extends from
-  where you pressed it. Press it again to turn it off; the selection
-  collapses to its head.
-- Going back the other way shrinks the selection, and once the head comes
-  back to the anchor it carries on past it, selecting the other way.
-- `ctrl-S` collapses to the anchor and `alt-S` to the head, both turning
-  persistent selection off. `esc` drops the selection too.
-- Typing replaces the selection and turns persistent selection off, as
-  typing does Emacs's mark.
-- Copying with `A-c` lets go of the selection too: it collapses to each
-  head and turns persistent selection off, so the next motion moves rather
-  than growing what you copied. `A-S-c` copies and keeps the selection.
-- Each cursor moves and selects on its own, so all of this works with
-  several cursors.
-- Searches (`ctrl-n`, `alt-n`) select their match. They extend only when
-  persistent selection is on or motions built the selection, so `ctrl-n`
-  after a search goes to the next match rather than growing the first.
+- **Every plain motion selects what it moved over**, and pressed again it
+  selects the next piece on its own rather than growing the last one.
+- **Shift carries the selection on:** `C-w C-S-w C-S-w` selects three
+  words; `A-a A-S-a A-S-a` three lines. The anchor stays where it was, and
+  going back past it shrinks the selection, then grows it the other way.
+- **`C-space` stops selecting:** each selection collapses to its cursor.
+  `esc` does too, `C-S-s` collapses to the anchor and `A-S-s` to the head.
+- **Act on what's selected:** `C-d` deletes it (`C-w C-d` deletes a word,
+  `A-a C-d` to the line's end), `A-c` copies it, `` C-` `` changes its case,
+  `C-\` comments its lines, `C-S-t a (` puts brackets round it.
+- **Typing after a motion types at the cursor:** what a plain motion
+  selected is dropped when you type, press `enter` or `backspace` or paste,
+  so moving and then typing never deletes what you moved over. To replace
+  text by typing, select it on purpose: with shift, a text object
+  (`C-t w` then type replaces the word), `C-s`, or `C-x h`.
+- **Copying with `A-c` stops selecting** too, so the next motion selects
+  afresh. `A-S-c` copies and keeps the selection.
+- **Each cursor selects on its own**, so all of this works with several.
+- **Searches** (`C-n`, `A-n`) select their match; `C-S-n` and `A-S-n`
+  extend the selection to it.
+- **Jumps** to a label (`C-m`), a mark or a line leave a cursor there;
+  `C-S-m` extends the selection to the label instead.
+- **Extend mode** (`C-x space`, off with `C-space`) makes plain motions
+  carry the selection on as shift does, for terminals that can't send
+  ctrl with shift.
 
 ## Keys
 
@@ -68,8 +81,8 @@ capitals in Greed's key names: `ctrl-W` is ctrl-shift-w.
 
 ### Motions
 
-Shift selects (`C-S-w`, `A-S-w` and so on); without shift a motion
-extends an active selection and otherwise moves.
+Each selects what it moves over; with shift (`C-S-w`, `A-S-w` and so on)
+it carries the selection on instead.
 
 | Ctrl | | Alt | |
 |---|---|---|---|
@@ -79,9 +92,9 @@ extends an active selection and otherwise moves.
 | `C-k` | Up a line | `A-k` | Down a line |
 | `C-w` | Next word start | `A-w` | Previous word start |
 | `C-e` | Next word end | `A-e` | Previous word end |
-| `C-a` | First non-blank, then line start | `A-a` | Line end |
+| `C-a` | First non-blank, then line start, then the line before | `A-a` | Line end, then the next line |
 | `C-v` | Page down | `A-v` | Page up |
-| `C-g g` | Buffer start (`C-g G` selects) | `A-g g` | Buffer end (`A-g G` selects) |
+| `C-g g` | To the buffer's start (`C-g G` extends) | `A-g g` | To its end (`A-g G` extends) |
 
 Up and down keep the column they started from.
 
@@ -98,8 +111,8 @@ On the cursor's line, with the character taken literally (punctuation,
 | `A-; x` | `Tx` | Back to just after the previous `x` |
 | `C-.` | `;` | The last find again, the same way |
 | `A-.` | `,` | The last find again, the other way |
-| `C-F x`, `A-F x` | | Select through the character |
-| `C-: x`, `A-: x` | | Select up to it (shift with `;`) |
+| `C-F x`, `A-F x` | | Extend through the character |
+| `C-: x`, `A-: x` | | Extend up to it (shift with `;`) |
 
 A till skips the character right beside the cursor, so `C-.` after one
 moves on to the next match.
@@ -108,7 +121,8 @@ moves on to the next match.
 
 | Keys | |
 |---|---|
-| `C-space` | Persistent selection on; again, off and collapse to the head |
+| `C-space` | Stop selecting: collapse to the cursor |
+| `C-x space` | Extend mode: plain motions extend, until `C-space` |
 | `C-S-s` | Collapse to the anchor |
 | `A-S-s` | Collapse to the head |
 | `esc` | Drop the selection |
@@ -120,8 +134,8 @@ moves on to the next match.
 
 `C-t` then a key selects inside the object around each cursor; `A-t`
 then a key selects around it. The second key works with or without its
-modifier (`C-t C-b` or `C-t b`). Objects don't turn persistent selection
-on, but motions extend what they select.
+modifier (`C-t C-b` or `C-t b`). Shifted motions carry an object's
+selection on, and typing replaces it.
 
 | Inside | Around | Object |
 |---|---|---|
@@ -147,7 +161,7 @@ deletes one. `C-c e a`, `C-c e r` and `C-c e d` do the same.
 
 | Ctrl | | Alt | |
 |---|---|---|---|
-| `C-d` | Delete forward (or the selection) | `A-d` | Delete backward (or the selection) |
+| `C-d` | Delete the selection, or the character after | `A-d` | Delete the selection, or the character before |
 | `C-i` | Indent | `A-i` | Unindent |
 | `C-o` | Open a line below | `A-o` | Open a line above |
 | `C-u` | Move the lines up, selections and all | `A-u` | Move them down |
@@ -156,7 +170,7 @@ deletes one. `C-c e a`, `C-c e r` and `C-c e d` do the same.
 | `C-\` | Comment the lines, or uncomment them if they all are | `A-\` | Uncomment the lines that have a comment; never adds one |
 | `` C-` `` | Case: lower, UPPER, Title | `` A-` `` | Case the other way round |
 | `C-z` | Undo | `A-z` | Redo |
-| `A-c` | Copy the selection, or the line with nothing selected, and let go of the selection | `A-S-c` | Copy, keeping the selection |
+| `A-c` | Copy the selection (the line with nothing selected) and stop selecting | `A-S-c` | Copy, keeping the selection |
 | `C-S-x` | Cut the selection, or the line with nothing selected | | |
 | `C-y` | Paste, replacing the selection (whole lines go above) | `A-y` | Take the paste back, if it's still the last thing done |
 | `C-r` | Replace the next match of the search | `A-r` | Replace the previous match |
@@ -283,14 +297,14 @@ arrive as themselves. Use the fallbacks:
 | `C-]` / `A-]` | `C-]` works; `alt-]` may not | `C-t ]` / `C-t [` next / previous sibling |
 | `C-'` / `A-'` | Nothing usable | `C-g m x` / `C-g ' x` |
 | `C-;`, `C-.`, `C-=`, `C--`, `C-/`, `C-\` | Often nothing, or another key | Finds: `C-f` / `A-f` (no fallback for till and repeat); folds: `C-c z c` / `C-c z o`; case: `C-c c`; search: `C-c s b` |
-| `C-S-letter` motions | The same as `C-letter` | Turn on `C-space` first and use the plain motion |
+| `C-S-letter` motions | The same as `C-letter` | `C-x space` (extend mode), then the plain motions, `C-space` to stop; or the `A-S-` twin (`A-S-k` for `C-S-j`) |
 | `C-S-x` | `C-x`, the prefix | `C-c e x` |
 | `C-S-d` | `C-d`, which deletes | `C-c e u` (and `C-c e U` for `A-S-d`) |
 | `C-S-o` | `C-o`, which opens a line | `C-c e j` (`A-S-o` works: `C-c e O` too) |
 | `C-S-p` / `C-S-b` | `C-p` next pane / `C-b` next buffer | `C-x C-f` / `C-x b` |
 | `C-S-r` | `C-r`, replace next | `C-c l n` |
 | `C-S-t` | `C-t`, the text objects (so `a` selects inside `<>`) | `C-c e a` / `r` / `d` |
-| `` C-` `` | Usually `C-space` (both send the same byte), which toggles the selection | `C-c c >` / `C-c c <` |
+| `` C-` `` | Usually `C-space` (both send the same byte), which stops selecting | `C-c c >` / `C-c c <` |
 | `C-,` | A plain `,`, which types | `C-c e .` |
 | `C-h` | Some terminals send it for `backspace` | `backspace` still deletes |
 
@@ -354,7 +368,7 @@ unchanged. The tests check both sides.
 
 | Key | Greed's default (every mode) | In Flash |
 |---|---|---|
-| `C-space` | The leader in the VS Code style; the leader from a terminal | Persistent selection. The leader is `alt-space` |
+| `C-space` | The leader in the VS Code style; the leader from a terminal | Stop selecting. The leader is `alt-space` |
 | `A-h` `A-j` `A-k` `A-l` | Move to the pane on that side | Character and line motions. Panes: `alt` and the arrows (still Greed's), `C-p` / `A-p`, `C-x o` |
 | `A-p` | The pane mode | Previous pane. Pane mode: `C-x p` |
 | `A-t` | The tab mode | Around text objects. Tab mode: `C-x t` |
@@ -395,16 +409,19 @@ and terminals, which have layers of their own ahead of a style's.
   type in a style without modes. Commands that ignore counts ignore them
   here too.
 - `C-=` / `A-=` change the text size in the window client only.
-- The style's mode label stays `flash` while persistent selection is on;
-  the status line says "Selection on" and "Selection off" as you toggle.
+- The style's mode label stays `flash` in extend mode; the status line
+  says "Selection on" and "Selection off" as `C-x space` toggles it.
 - The key table is written for a US keyboard. On other layouts, the
   punctuation keys (`;` `'` `[` `]` `\` `/` `=` `-`) are where those
   characters are typed with ctrl, which the terminal may not send.
 
 ### Tested and not
 
-`greed test` runs 105 tests over: plain and selecting motions, repeated
-`C-S-w`, `C-space` on and off, shrinking and crossing the anchor,
+`greed test` runs 113 tests over: every motion selecting and selecting
+the next piece again, shift carrying the selection on, `C-space`
+stopping it and extend mode, typing, `enter`, `backspace`, `delete` and
+paste after a motion going in at the cursor, shrinking and crossing the
+anchor,
 f/F/t/T and their repeats (punctuation, space, multi-byte), every text
 object, syntax node selection, surround, the jump and its cancelling,
 marks, case changes, copying (letting go and keeping the selection, the line with nothing selected, one piece per cursor), cut, paste and taking it back, moving, duplicating and joining lines (multiline and with several cursors, each one undo step), commenting and uncommenting, search and replace, line

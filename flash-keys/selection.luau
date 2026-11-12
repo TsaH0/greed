@@ -1,28 +1,33 @@
--- The selection engine. Each range has a fixed anchor and a head that
--- motions move. A motion extends the selection (keeps the anchor) when
--- the selection is active, and otherwise moves the cursor, leaving none.
+-- The selection engine, selection first as in Helix and Kakoune. Each
+-- range has an anchor and a head.
 --
--- The selection is active when any of these hold:
---   * the motion was pressed with shift (`ctrl-W`), which starts one;
---   * persistent selection is on (`ctrl-space`), as Emacs's mark;
---   * something is selected, as after a text object;
---   * the last thing to touch the selection was an extending motion, so a
---     head that came back onto its anchor keeps going past it.
+--   * A plain motion selects what it moves over: from where the cursor
+--     was to where the motion lands. Pressed again, it selects the next
+--     piece on its own (ctrl-w the next word, alt-a the next line).
+--   * With shift, a motion keeps the anchor and moves the head, carrying
+--     the selection on. Going back past the anchor shrinks it and then
+--     grows it the other way.
+--   * ctrl-space and esc stop selecting: each range collapses to its head.
 --
--- Positions are between characters (the style's cursor is a bar), so a
--- range covers anchor..head whichever way round, and moving the head back
--- past the anchor shrinks the selection and then grows it the other way.
+-- What a plain motion selects is "soft": typing, enter, backspace and
+-- pasting drop it and type at the cursor, so moving and then typing never
+-- deletes what the motion went over. Commands that act on a selection
+-- (delete, copy, case, comment, surround) take it. Selections made any
+-- other way (shift, text objects, ctrl-s) are replaced by typing, as
+-- they always were.
+--
+-- Positions are between characters (the style's cursor is a bar).
 
 local greed = require("@greed")
-local core = require("@core")
 
 local M = {}
 
--- Persistent selection, by view and the buffer it shows: another buffer
--- in the view starts without it.
+-- Extend mode, by view and the buffer it shows: with it on, plain motions
+-- extend as shifted ones do (C-x space, for terminals that can't send
+-- ctrl with shift).
 local sticky: { [string]: boolean } = {}
--- The selection an extending motion left, by view and buffer.
-local made: { [string]: greed.Selection } = {}
+-- The selection a plain motion left, by view and buffer.
+local soft: { [string]: greed.Selection } = {}
 
 local function key(view: greed.View): string
 	return `{view:id()}:{view:buffer():id()}`
@@ -40,6 +45,8 @@ local function same(a: greed.Selection, b: greed.Selection?): boolean
 	return true
 end
 
+M.same = same
+
 --- Whether persistent selection is on in `view`.
 function M.sticky(view: greed.View): boolean
 	return sticky[key(view)] == true
@@ -48,37 +55,35 @@ end
 --- Turns persistent selection on or off in `view`.
 function M.set_sticky(view: greed.View, on: boolean)
 	sticky[key(view)] = if on then true else nil
-	if not on then
-		made[key(view)] = nil
-	end
 end
 
---- Whether a motion in `view` extends the selection rather than moving.
---- With `strict`, as for searches, a selection only counts when motions
---- made it, so a search's own match doesn't make the next search extend.
-function M.active(view: greed.View, shift: boolean?, strict: boolean?): boolean
-	if shift or sticky[key(view)] then
-		return true
-	end
-	local selection = view:selection()
-	if same(selection, made[key(view)]) then
-		return true
-	end
-	return not strict and core.text.anything_selected(selection)
+--- Whether a motion in `view` extends the selection, keeping its anchor:
+--- with shift, or while persistent selection is on.
+function M.active(view: greed.View, shift: boolean?, _strict: boolean?): boolean
+	return shift == true or sticky[key(view)] == true
 end
 
---- Notes that `view`'s selection was made by extending, so the next motion
---- extends it too.
+--- Notes that `view`'s selection is one a plain motion made, which typing
+--- drops rather than replaces.
+function M.soften(view: greed.View)
+	soft[key(view)] = view:selection()
+end
+
+--- Whether `view`'s selection is still the one a plain motion made.
+function M.is_soft(view: greed.View): boolean
+	return same(view:selection(), soft[key(view)])
+end
+
+--- Notes that `view`'s selection was made on purpose (shift, a text
+--- object), so typing replaces it.
 function M.remember(view: greed.View)
-	made[key(view)] = view:selection()
+	soft[key(view)] = nil
 end
 
-function M.forget(view: greed.View)
-	made[key(view)] = nil
-end
+M.forget = M.remember
 
---- Sets each range from `extend` (anchor kept) or as a cursor at the new
---- head, and remembers which.
+--- For a jump somewhere (a mark, a line, a label): each head goes to
+--- `heads[i]`, extending when `extend`, and otherwise leaving a cursor.
 function M.place(view: greed.View, heads: { number }, extend: boolean)
 	local selection = view:selection()
 	for i, range in selection.ranges do
@@ -88,39 +93,63 @@ function M.place(view: greed.View, heads: { number }, extend: boolean)
 			else { anchor = head, head = head }
 	end
 	view:set_selection(selection)
+	M.remember(view)
+end
+
+--- Where a motion takes a head: the new head, and for a motion that picks
+--- out a piece of its own (the next word, the next line), where that piece
+--- starts. Nil leaves the range as it is.
+export type Target = (buffer: greed.Buffer, head: number) -> (number?, number?)
+
+--- Runs a motion on each range (count times): with shift (or persistent
+--- selection) the head moves and the anchor stays; otherwise each range
+--- becomes what the motion went over, from its head or the start of the
+--- piece the motion picked out.
+function M.move(ctx: greed.Context, target: Target, shift: boolean?)
+	local view = ctx.view
+	local extend = M.active(view, shift)
+	local selection = view:selection()
+	for i, range in selection.ranges do
+		local head, start = range.head, nil
+		for step = 1, ctx.count or 1 do
+			local to, from = target(ctx.buffer, head)
+			if to == nil then
+				break
+			end
+			if step == 1 then
+				start = from
+			end
+			head = to
+		end
+		selection.ranges[i] = if extend
+			then { anchor = range.anchor, head = head }
+			else { anchor = start or range.head, head = head }
+	end
+	view:set_selection(selection)
 	if extend then
 		M.remember(view)
 	else
-		M.forget(view)
+		M.soften(view)
 	end
 end
 
---- Moves each head to `target(buffer, head)` (count times), extending when
---- the selection is active or `shift` is held.
-function M.move(
-	ctx: greed.Context,
-	target: (buffer: greed.Buffer, head: number) -> number?,
-	shift: boolean?
-)
-	local extend = M.active(ctx.view, shift)
+--- For a jump somewhere: moves each head with `target`, extending with
+--- shift or persistent selection, and otherwise leaving a cursor there.
+function M.teleport(ctx: greed.Context, target: Target, shift: boolean?)
 	local heads = {}
 	for i, range in ctx.view:selection().ranges do
-		local head = range.head
-		for _ = 1, ctx.count or 1 do
-			head = target(ctx.buffer, head) or head
-		end
-		heads[i] = head
+		heads[i] = target(ctx.buffer, range.head) or range.head
 	end
-	M.place(ctx.view, heads, extend)
+	M.place(ctx.view, heads, M.active(ctx.view, shift))
 end
 
---- Runs `command`, one of Greed's that moves the cursors, then keeps each
---- anchor when extending, or leaves a cursor at each head when not (unless
---- `keep` says to leave what the command selected, as a search's match,
---- and to extend only as `active`'s `strict` says).
+--- Runs `command`, one of Greed's that moves the cursors, as a motion: with
+--- shift each anchor stays, and otherwise each range becomes what the
+--- command moved over. With `keep`, what the command selected stays as it
+--- is when not extending, as a search's match.
 function M.wrap(ctx: greed.Context, command: string, shift: boolean?, keep: boolean?)
 	local view = ctx.view
-	local extend = M.active(view, shift, keep)
+	local extend = M.active(view, shift)
 	local before = view:selection()
 	greed.run(command, { count = ctx.count })
 	-- A jump to another file or pane leaves this view's selection alone.
@@ -128,18 +157,24 @@ function M.wrap(ctx: greed.Context, command: string, shift: boolean?, keep: bool
 		return
 	end
 	local after = view:selection()
-	if extend and #after.ranges == #before.ranges then
+	if #after.ranges ~= #before.ranges then
+		M.remember(view)
+		return
+	end
+	if extend then
 		for i, range in after.ranges do
 			after.ranges[i] = { anchor = before.ranges[i].anchor, head = range.head }
 		end
 		view:set_selection(after)
 		M.remember(view)
-	elseif not extend and not keep then
-		local heads = {}
+	elseif keep then
+		M.remember(view)
+	else
 		for i, range in after.ranges do
-			heads[i] = range.head
+			after.ranges[i] = { anchor = before.ranges[i].head, head = range.head }
 		end
-		M.place(view, heads, false)
+		view:set_selection(after)
+		M.soften(view)
 	end
 end
 
@@ -153,12 +188,13 @@ function M.collapse(view: greed.View, to_anchor: boolean)
 	end
 	view:set_selection(selection)
 	M.set_sticky(view, false)
+	M.remember(view)
 end
 
 greed.command({
 	name = "flash-toggle-selection",
-	doc = "Turn persistent selection on, so motions select; "
-		.. "again, turn it off and collapse to the cursor",
+	doc = "Extend mode: plain motions carry the selection on as shifted ones do, "
+		.. "until ctrl-space; again, turn it off and collapse to the cursor",
 	run = function(ctx)
 		if M.sticky(ctx.view) then
 			M.collapse(ctx.view, false)
@@ -187,6 +223,14 @@ greed.command({
 })
 
 greed.command({
+	name = "flash-stop-selection",
+	doc = "Stop selecting: collapse each selection to its cursor",
+	run = function(ctx)
+		M.collapse(ctx.view, false)
+	end,
+})
+
+greed.command({
 	name = "flash-escape",
 	doc = "Drop the selection and turn persistent selection off",
 	run = function(ctx)
@@ -196,6 +240,8 @@ greed.command({
 
 -- Editing ends persistent selection, as typing does Emacs's mark.
 local EDITS = {
+	["delete-back"] = true,
+	["delete-forward"] = true,
 	["type-char"] = true,
 	["type-newline"] = true,
 	["type-tab"] = true,
@@ -206,12 +252,35 @@ local EDITS = {
 	["cut-or-line"] = true,
 }
 
+-- What typing does to a soft selection: drops it, so the text goes in at
+-- the cursor rather than over what a motion went across.
+local TYPING = {
+	-- backspace and delete, through the typing role.
+	["delete-back"] = true,
+	["delete-forward"] = true,
+	["type-char"] = true,
+	["type-newline"] = true,
+	["type-tab"] = true,
+	["erase-back"] = true,
+	["erase-forward"] = true,
+	["paste-over"] = true,
+}
+
 greed.on("command.run", function(event: greed.CommandRun)
-	if EDITS[event.name] and greed.mode.get() == "flash" then
-		local view = greed.view()
-		if sticky[key(view)] then
-			M.set_sticky(view, false)
+	if greed.mode.get() ~= "flash" then
+		return
+	end
+	local view = greed.view()
+	if TYPING[event.name] and M.is_soft(view) then
+		local selection = view:selection()
+		for i, range in selection.ranges do
+			selection.ranges[i] = { anchor = range.head, head = range.head }
 		end
+		view:set_selection(selection)
+		M.remember(view)
+	end
+	if EDITS[event.name] and sticky[key(view)] then
+		M.set_sticky(view, false)
 	end
 end)
 

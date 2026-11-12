@@ -33,7 +33,7 @@ test("in flash, its own keys win over the keys bound for every mode", function(t
 	-- alt-h j k l move between panes everywhere else, alt-space arranges the
 	-- tab, alt-= and alt-- resize panes, alt-f toggles floats.
 	local mine = {
-		["ctrl-space"] = "flash-toggle-selection",
+		["ctrl-space"] = "flash-stop-selection",
 		["alt-h"] = "flash-char-right",
 		["alt-j"] = "flash-line-up",
 		["alt-k"] = "flash-line-down",
@@ -132,9 +132,9 @@ test("ctrl-c n gives the next command a count", function(t)
 	t:buffer("|a b c d e")
 	greed.mode.set("flash")
 	t:keys("ctrl-c n 3 ctrl-w")
-	t:expect("a b c |d e")
+	t:expect("^a b c |d e")
 	t:keys("ctrl-c n 2 ctrl-W")
-	t:expect("a b c ^d e|")
+	t:expect("^a b c d e|")
 end)
 
 test("unloading the plugin takes its style and keys away, and reloading brings them back", function(t)

@@ -44,9 +44,9 @@ test("a tag", function(t)
 	check(t, "<p>hi|</p>", "alt-t alt-x", "^<p>hi</p>|")
 end)
 
-test("an object leaves its selection for motions to extend, without persistent selection", function(t)
-	check(t, "f(a|b) c", "ctrl-t ctrl-r ctrl-l", "f(^ab)| c")
-	check(t, "f(a|b) c", "ctrl-t ctrl-r alt-S ctrl-l", "f(ab)| c")
+test("an object's selection is carried on with shift", function(t)
+	check(t, "f(a|b) c", "ctrl-t ctrl-r ctrl-L", "f(^ab)| c")
+	check(t, "f(a|b) c", "ctrl-t ctrl-r alt-S ctrl-l", "f(ab^)| c")
 end)
 
 test("each cursor gets its own object", function(t)

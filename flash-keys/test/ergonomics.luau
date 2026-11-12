@@ -61,30 +61,36 @@ end)
 
 -- Copy, cut, paste
 
-test("alt-c copies the selection, collapses to its head and ends persistent selection", function(t)
-	check(t, "|one two", "ctrl-space ctrl-w alt-c", "one |two")
-	-- Motions now move rather than growing what was copied.
+test("alt-c copies the selection and stops selecting", function(t)
+	check(t, "|one two", "ctrl-W alt-c", "one |two")
+	-- The next motion selects afresh rather than growing what was copied.
 	t:keys("ctrl-w")
-	t:expect("one two|")
+	t:expect("one ^two|")
+	-- And pasting after a plain motion goes in at the cursor.
 	t:keys("ctrl-y")
 	t:expect("one twoone |")
 end)
 
+test("alt-c copies what a plain motion selected", function(t)
+	check(t, "|one two", "ctrl-w alt-c alt-a ctrl-y", "one twoone |")
+end)
+
 test("alt-c with nothing selected copies the line, whole lines pasting above", function(t)
-	check(t, "a|b\ncd", "alt-c ctrl-j ctrl-y", "ab\nab\nc|d")
+	check(t, "a|b\ncd", "alt-c ctrl-j ctrl-space ctrl-y", "ab\nab\nc|d")
 end)
 
 test("alt-c copies every cursor's selection, one piece each", function(t)
 	check(t, "^a| 1\n^b| 2", "alt-c", "a| 1\nb| 2")
 	t:keys("alt-a ctrl-y")
 	t:expect("a 1a|\nb 2b|")
+	-- alt-a selected " 1" and " 2" softly, so the paste went in after them.
 end)
 
-test("alt-C copies and keeps the selection, so motions keep extending", function(t)
+test("alt-C copies and keeps the selection, so shift carries it on", function(t)
 	check(t, "|one two", "ctrl-W alt-C", "^one |two")
-	t:keys("ctrl-w")
+	t:keys("ctrl-W")
 	t:expect("^one two|")
-	t:keys("alt-S alt-a ctrl-y")
+	t:keys("ctrl-space ctrl-y")
 	t:expect("one twoone |")
 end)
 
@@ -177,11 +183,11 @@ end)
 test("text objects and character finds are where they were", function(t)
 	check(t, "x[a|b]y", "ctrl-t ctrl-b", "x[^ab|]y")
 	check(t, "x[a|b]y", "alt-t alt-b", "x^[ab]|y")
-	check(t, "|a,b,c", "ctrl-f ,", "a,|b,c")
-	check(t, "a,b,c|", "alt-f ,", "a,b|,c")
-	check(t, "|a,b,c", "ctrl-; ,", "a|,b,c")
-	check(t, "a,b,c|", "alt-; ,", "a,b,|c")
-	check(t, "|a,b,c", "ctrl-f , ctrl-.", "a,b,|c")
+	check(t, "|a,b,c", "ctrl-f ,", "^a,|b,c")
+	check(t, "a,b,c|", "alt-f ,", "a,b|,c^")
+	check(t, "|a,b,c", "ctrl-; ,", "^a|,b,c")
+	check(t, "a,b,c|", "alt-; ,", "a,b,|c^")
+	check(t, "|a,b,c", "ctrl-f , ctrl-.", "a,^b,|c")
 end)
 
 test("letters still type, shifted ones too", function(t)
