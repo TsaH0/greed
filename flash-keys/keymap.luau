@@ -14,6 +14,8 @@ local MOTIONS: { { string } } = {
 	{ "k", "line-up", "line-down" },
 	{ "w", "word-next", "word-prev" },
 	{ "e", "word-end", "word-end-prev" },
+	-- WORDs: runs of anything but blanks, as Vim's W and B.
+	{ "q", "bigword-next", "bigword-prev" },
 	{ "a", "line-start", "line-end" },
 	{ "v", "page-down", "page-up" },
 }
@@ -134,6 +136,10 @@ M.keys = {
 	["alt-g n"] = "prev-diagnostic",
 	["alt-g alt-d"] = "jump-back",
 	["ctrl-g w"] = "jump-to-word",
+	["ctrl-g o"] = "pick-outline",
+	["ctrl-g s"] = "pick-workspace-symbol",
+	["ctrl-g ]"] = "next-function",
+	["ctrl-g ["] = "prev-function",
 	["ctrl-g m"] = "flash-mark-set",
 	["ctrl-g '"] = "flash-mark-goto",
 	["ctrl-g ctrl-o"] = "jump-back",

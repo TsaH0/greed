@@ -49,6 +49,13 @@ local function word_next(buffer: Buffer, head: number): (number, number)
 	return text.next_word_start(buffer, from), from
 end
 
+-- The next WORD (a run of anything but blanks, so `#include` and
+-- `#[derive(Debug)]` are one) with the blanks after it.
+local bigword_next = function(buffer: Buffer, head: number): (number, number)
+	local from = past_blanks(buffer, head)
+	return text.next_big_word_start(buffer, from), from
+end
+
 -- The next word on its own, without the blanks before or after it.
 local function word_end(buffer: Buffer, head: number): (number, number)
 	local from = past_blanks(buffer, head)
@@ -96,6 +103,8 @@ M.targets = {
 	["word-prev"] = text.prev_word_start,
 	["word-end"] = word_end,
 	["word-end-prev"] = M.prev_word_end,
+	["bigword-next"] = bigword_next,
+	["bigword-prev"] = text.prev_big_word_start,
 	["line-start"] = line_start,
 	["line-end"] = line_end,
 } :: { [string]: selection.Target }
@@ -107,6 +116,8 @@ local DOCS: { [string]: string } = {
 	["word-prev"] = "to the start of the previous word",
 	["word-end"] = "to the end of the word",
 	["word-end-prev"] = "to the end of the previous word",
+	["bigword-next"] = "to the start of the next WORD (punctuation and all, as #include)",
+	["bigword-prev"] = "to the start of the previous WORD",
 	["line-start"] = "back to the first non-blank, the line's start, then the line before",
 	["line-end"] = "to the end of the line, then the next line",
 	["line-down"] = "a line down",
